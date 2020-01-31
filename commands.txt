@@ -1,0 +1,35 @@
+#Finding car
+donkey findcar
+
+python ~/mycar/manage.py train --model ~/mycar/models/mypilot.h5
+
+#Transfering files
+rsync -r pi:~/donkeycar/d2/data/  ~/Documents/research/self-driving-car/donkeycar/mycar/data/
+rsync -r ~/Documents/research/self-driving-car/donkeycar/mycar/models/lin_aug2_collab.h5 pi:~/donkeycar/d2/models/
+
+# Train
+python manage.py train --model ~/Documents/research/self-driving-car/donkeycar/mycar/models/mod_lin_aug_1.h5
+python manage.py train --model ~/Documents/research/self-driving-car/donkeycar/mycar/models/mod_cat_1.h5 --type catagorical
+
+#model
+python manage.py drive --model ~/Documents/research/self-driving-car/donkeycar/mycar/models/m_3.h5
+
+
+#movie
+
+donkey makemovie --tub=~/Documents/research/self-driving-car/donkeycar/mycar/data/tub_3_19-12-22 --out=movie_mod_lin_2.mp4
+
+
+
+#github
+git config --global user.name "JuanFuriaz"
+git config --global user.email "juan.furiaz88@gmail.com"
+git config --global credential.helper 'cache --timeout=100800'
+git config --global user.password "oaDCpWTF2019!"
+
+#Update
+git checkout master
+git pull
+pip install -e .[pi]   # or [pc]
+cd ~/mycar
+donkey update
