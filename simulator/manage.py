@@ -19,6 +19,9 @@ import time
 from docopt import docopt
 import numpy as np
 
+import sys
+sys.path.insert(0, '../')
+
 import donkeycar as dk
 
 #import parts
