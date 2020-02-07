@@ -1,21 +1,22 @@
 """
 Script to augment teaching data
-version 1.4
--Folder's processing changed
-    - don't make copy of original file
-    - create automatically folder if not existing with the tub's name being used (example: tub_10-22-12_candy)
-
+version 1.3
+-adding parser and using args
 Usage:
     augment.py --path=<records_dir> --out=<target_dir> [--method=all|classic|gaussian|threshold|canny|style_aug] --gpu_enabled=1
 
 Options:
-    TODO: change names of commands
+    TODO: change names
     -h --help        Show this screen.
     --path TUBPATHS   Path of the record directory
     --out MODELPATH  Path of the model file
 
 
 Todo:
+- add parser
+- change function's input to args
+- dont copy origin images
+- create folder with tub name: example: tub_10-22-12_candy
 - FUTURE have both options of creating folder OR giving array
 - multiple folder arrays with subcomand, example of options
         -all: do everything
@@ -64,7 +65,6 @@ def print_progress(count, total, name='', bar_length=20):
     if count == total:
         print()
 
-
 def initialize_records(records, path, out, target_dir):
     sum = 0
 
@@ -84,21 +84,19 @@ def initialize_records(records, path, out, target_dir):
             shutil.copy(record, target_path)
             shutil.copy('%s/%s' % (path, img_path), target_path)
 
-    return sum, target_path
+    return (sum, target_path)
 
-
-# Removing round_number
-# round_number = 0
+# TODO: better place for global stuff
+round_number = 0
 
 def augmentation_round(in_path, out, total, name, augment_function, meta_function=None, args=None):
-    target = '%s_%s' % (out, name)
+    global round_number
+    round_number += 1
+    target = '%s/%s_%s' % (out, round_number, name)
     records = glob.glob('%s/record*.json' % in_path)
     records = ((int(re.search('.+_(\d+).json', path).group(1)), path) for path in records)
+
     ensure_directory(target)
-    if out and target is not out and not is_empty(target):
-        print(' Target folder "%s" must be empty' % target)
-        print(' Creating ERROR')
-        return (None, None)
     if (meta_function is not None):
         with open('%s/meta.json' % in_path, 'r') as meta_file:
             raw_data = json.load(meta_file)
@@ -115,24 +113,25 @@ def augmentation_round(in_path, out, total, name, augment_function, meta_functio
             data = json.load(record_file)
             img_path = data['cam/image_array']
         if not args:
-           # print("In Img_path: " + '%s/%s' % (in_path, img_path))
+            print("In Img_path: " + '%s/%s' % (in_path, img_path))
             img = Image.open('%s/%s' % (in_path, img_path))
             img = np.array(img)
         else:
             img = '%s/%s' % (in_path, img_path)
-
+        
         write(target, _, img, data, name, augment_function, args)
         count = count + 1
         print_progress(count, total, name)
 
-    return count, target
+    return (count, target)
 
 
-def write(out, id, img, data, name, augment_function, args=None):
+def write(out, id, img, data, name, augment_function, args =None):
+
     if not args:
         new_img, new_data = augment_function(img, data)
-        if new_img is None or new_data is None:
-            return
+        if (new_img is None or new_data is None):
+             return
     else:
         new_data = data
         new_img = img
@@ -151,12 +150,10 @@ def write(out, id, img, data, name, augment_function, args=None):
     with open(record_path, 'w') as outfile:
         json.dump(new_data, outfile)
 
-
 # TODO: better place for global stuff
 HISTORY_LENGTH = 50
 current_history_length = 0
 history_buffer = {}
-
 
 def gen_history_meta(old_meta):
     meta_with_history = copy.deepcopy(old_meta)
@@ -166,27 +163,25 @@ def gen_history_meta(old_meta):
         meta_with_history['types'].append('%s_array' % type_key)
     return meta_with_history
 
-
 def augment_history(img, data):
     global current_history_length
     global history_buffer
     data_with_history = copy.deepcopy(data)
     data_keys = data.keys()
     for key in data_keys:
-        if key not in history_buffer:
+        if (key not in history_buffer):
             history_buffer[key] = deque(maxlen=HISTORY_LENGTH)
         history_buffer[key].append(data[key])
     current_history_length += 1
-    if current_history_length < HISTORY_LENGTH:
-        return None, None
+    if (current_history_length < HISTORY_LENGTH):
+        return (None, None)
 
     # TODO: this includes also the current value
     for key in data_keys:
         history_key = 'history/%s' % key
         data_with_history[history_key] = list(history_buffer[key])
 
-    return img, data_with_history
-
+    return (img, data_with_history)
 
 def aug_flip(inputs, outputs):
     img = inputs[0]
@@ -197,21 +192,19 @@ def aug_flip(inputs, outputs):
     augmented_inputs[0] = img
     return augmented_inputs, augmented_outputs
 
-
 def aug_brightness(inputs, outputs):
     img = inputs[0]
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    img = np.array(img, dtype=np.float64)
-    random_bright = .5 + np.random.uniform()
-    img[:, :, 2] = img[:, :, 2] * random_bright
-    img[:, :, 2][img[:, :, 2] > 255] = 255
-    img = np.array(img, dtype=np.uint8)
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+    img = np.array(img, dtype = np.float64)
+    random_bright = .5+np.random.uniform()
+    img[:,:,2] = img[:,:,2]*random_bright
+    img[:,:,2][img[:,:,2]>255]  = 255
+    img = np.array(img, dtype = np.uint8)
     img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
 
     augmented_inputs = copy.deepcopy(inputs)
     augmented_inputs[0] = img
     return augmented_inputs, outputs
-
 
 def aug_shadow(inputs, outputs):
     img = inputs[0]
@@ -241,10 +234,9 @@ def aug_shadow(inputs, outputs):
     augmented_inputs[0] = img
     return augmented_inputs, outputs
 
-
 def aug_shadow2(inputs, outputs):
-    img = cv2.cvtColor(inputs[0], cv2.COLOR_BGR2HSV)
-    img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
+    img = cv2.cvtColor(inputs[0],cv2.COLOR_BGR2HSV)
+    img = cv2.cvtColor(img,cv2.COLOR_HSV2BGR)
 
     top_y = 320 * np.random.uniform()
     top_x = 0
@@ -257,7 +249,7 @@ def aug_shadow2(inputs, outputs):
 
     shadow_mask[((X_m - top_x) * (bot_y - top_y) - (bot_x - top_x) * (Y_m - top_y) >= 0)] = 1
     # random_bright = .25+.7*np.random.uniform()
-    # if np.random.randint(2) == 1:
+    #if np.random.randint(2) == 1:
     random_bright = .4
     random_bright2 = .2
     cond = shadow_mask == np.random.randint(2)
@@ -270,18 +262,17 @@ def aug_shadow2(inputs, outputs):
     augmented_inputs[0] = img
     return augmented_inputs, outputs
 
-
 def augment_flip(img, data):
     data = copy.deepcopy(data)
     img = cv2.flip(img, 1)
 
     flip_keys = [
         'user/angle',
-        # 'acceleration/y',
-        # 'gyro/y',
-        #'history/user/angle',
-        # 'history/acceleration/y',
-        # 'history/gyro/y'
+        #'acceleration/y',
+        #'gyro/y',
+        'history/user/angle',
+        #'history/acceleration/y',
+        #'history/gyro/y'
     ]
 
     for key in flip_keys:
@@ -292,28 +283,26 @@ def augment_flip(img, data):
             data[key] = 0 - data[key]
 
     # Sonar values have to be switched
-    # old_sonar_left = data['sonar/left']
-    # data['sonar/left'] = data['sonar/right']
-    # data['sonar/right'] = old_sonar_left
+    #old_sonar_left = data['sonar/left']
+    #data['sonar/left'] = data['sonar/right']
+    #data['sonar/right'] = old_sonar_left
 
-    # old_sonar_history_left = data['history/sonar/left']
-    # data['history/sonar/left'] = data['history/sonar/right']
-    # data['history/sonar/right'] = old_sonar_history_left
+    #old_sonar_history_left = data['history/sonar/left']
+    #data['history/sonar/left'] = data['history/sonar/right']
+    #data['history/sonar/right'] = old_sonar_history_left
 
-    return img, data
+    return (img, data)
 
+def augment_brightness(img, data):
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+    img = np.array(img, dtype = np.float64)
+    random_bright = .2+np.random.uniform()
+    img[:,:,2] = img[:,:,2]*random_bright
+    img[:,:,2][img[:,:,2]>255]  = 255
+    img = np.array(img, dtype = np.uint8)
+    img = cv2.cvtColor(img,cv2.COLOR_HSV2BGR)
 
-def augment_brightness (img, data):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    img = np.array(img, dtype=np.float64)
-    random_bright = .2 + np.random.uniform()
-    img[:, :, 2] = img[:, :, 2] * random_bright
-    img[:, :, 2][img[:, :, 2] > 255] = 255
-    img = np.array(img, dtype=np.uint8)
-    img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
-
-    return img, data
-
+    return (img, data)
 
 def augment_shadow(img, data):
     top_y = 320 * np.random.uniform()
@@ -328,7 +317,7 @@ def augment_shadow(img, data):
     shadow_mask[((X_m - top_x) * (bot_y - top_y) - (bot_x - top_x) * (Y_m - top_y) >= 0)] = 1
     # random_bright = .25+.7*np.random.uniform()
     if np.random.randint(2) == 1:
-        random_bright = .2
+        random_bright = .5
         cond1 = shadow_mask == 1
         cond0 = shadow_mask == 0
         if np.random.randint(2) == 1:
@@ -336,7 +325,7 @@ def augment_shadow(img, data):
         else:
             image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0] * random_bright
     img = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
-    return img, data
+    return (img, data)
 
 
 #
@@ -345,28 +334,31 @@ def augment_shadow(img, data):
 
 # gaussian blur
 def augment_gaussian_blur(img, data):
-    gauss = ImgGaussianBlur()
+    gauss= ImgGaussianBlur()
     img = gauss.run(img)
-    return img, data
+    return (img, data)
 
 
 # threshold
 def augment_threshold(img, data):
     threshold = ImgThreshold()
     img = threshold.img_threshold(img)
-    return img, data
+    return (img, data)
 
 
+#
+#augment_style_alpha = 1
+#augment_style_gpu_enabled = 0
+# style augmentation
 def augment_style(img, data):
     style = ImgStyleAug()
-    img = style.img_style(img, augment_style_alpha)
-    return img, data
-
+    img = style.img_style(img,augment_style_alpha)
+    return (img, data)
 
 def augment_style_neural(inImg, outImg, args):
     args.export_onnx = False
     args.output_image = outImg
-    args.content_image = inImg
+    args.content_image= inImg
     args.content_scale = 1
     neural_style.stylize(args)
 
@@ -375,76 +367,67 @@ def augment_style_neural(inImg, outImg, args):
 def augment_canny(img, data):
     canny = ImgCanny()
     img = canny.run(img)
-    return img, data
+    return (img, data)
 
+def augment(target, out = None, method_args='all', args = None):
 
-def augment(target, out=None, method_args='all', args=None):
     print('Start augmentation')
 
     records = glob.glob('%s/record*.json' % target)
     records = ((int(re.search('.+_(\d+).json', path).group(1)), path) for path in records)
-    # Directories starting with underscore are skipped in training. Originals have no history augmented so have to be skipped
-    #
 
-    """
-    #Remove because it creates additional library
+    # Directories starting with underscore are skipped in training. Originals have no history augmented so have to be skipped
     size, init_path = initialize_records(records, target, out, "_original")
+
+    count = size
+
     if not out:
         out = target
     print('  Augmenting %d records from "%s". Target folder: "%s"' % (count, target, out))
     if target is not out:
         print('  Original files copies to "%s"', init_path)
     print('  -------------------------------------------------')
-    """
-
-    sum = 0
-    for _, record in records:
-        sum = sum + 1
-
-    count = sum
-    init_path = out
-
-    # TODO: Manuel why giving the path of the other methods like history?
+    
     if 'all' in method_args or 'classic' in method_args:
-        """
         size, history_path = augmentation_round(init_path, out, count, 'history', augment_history, gen_history_meta)
         count = count + size
-        """
-        size, flipped_path = augmentation_round(init_path, out, count, 'flipped', augment_flip)
+        size, flipped_path = augmentation_round(history_path, out, count, 'flipped', augment_flip)
         count = count + size
-        size, bright_path = augmentation_round(init_path, out, count, 'bright', augment_brightness)
+        size, bright_path = augmentation_round(flipped_path, out, count, 'bright', augment_brightness)
         count = count + size
-        size, shadow_path = augmentation_round(init_path, out, count, 'shadow', augment_shadow)
+        size, shadow_path = augmentation_round(bright_path, out, count, 'shadow', augment_shadow)
         count = count + size
-
+    
+    
     if 'all' in method_args or 'gaussian' in method_args:
         size, gaussian_path = augmentation_round(init_path, out, count, 'gaussian_blur', augment_gaussian_blur)
         count = count + size
-
+       
     if 'all' in method_args or 'threshold' in method_args:
         size, threshold = augmentation_round(init_path, out, count, 'threshold', augment_threshold)
         count = count + size
-
+        
     if 'all' in method_args or 'canny' in method_args:
         size, canny = augmentation_round(init_path, out, count, 'canny', augment_canny)
         count = count + size
-
+    
     if 'all' in method_args or 'style_aug' in method_args:
-        #    global augment_style_gpu_enabled
-        #     if gpu_enabled:
-        #          augment_style_gpu_enabled = 1
         global augment_style_alpha
+    #    global augment_style_gpu_enabled
+   #     if gpu_enabled:
+  #          augment_style_gpu_enabled = 1
+        
         augment_style_alpha = args.style_alpha
-        size, style = augmentation_round(init_path, out, count, "".join(['style_aug_', str(augment_style_alpha)]),
-                                         augment_style)
+        size, style = augmentation_round(init_path, out, count, "".join(['style_aug_',str(augment_style_alpha) ]) , augment_style)
         count = count + size
 
     if 'all' in method_args or 'style_neural' in method_args:
-        model_name = args.model.split("/")[-1].split(".")[0]
 
-        size, style = augmentation_round(init_path, out, count, model_name,
+        size, style = augmentation_round(init_path, out, count, "".join(['style_neural_']),
                                          augment_style_neural, args=args)
         count = count + size
+
+
 
     print('  -------------------------------------------------')
     print('Augmentation done. Total records %s.' % count)
@@ -454,10 +437,6 @@ def is_empty(dir):
     return not os.listdir(dir)
 
 
-def create_out_tub_path(args):
-    return "".join([args.out_path, args.target_path.split("/")[-1]])
-
-
 if __name__ == '__main__':
     """
     Example of use
@@ -465,25 +444,28 @@ if __name__ == '__main__':
     
     """
     import argparse
-
     parser = argparse.ArgumentParser(description="Parser for creating augmented data")
 
-    parser.add_argument('-t', '--target-path', help='Images dir', default='mycar/data/*.jpg', type=str, required=True, )
-    parser.add_argument('-o', '--out-path', help='Path to save generated stylized images', default='mycar/data/',
-                        type=str, required=False, )
+    parser.add_argument('-t', '--target-path', help='Images dir', default= 'mycar/data/*.jpg', type=str, required=True,)
+    parser.add_argument('-o', '--out-path', help='Path to save generated stylized images', default='mycar/data/', type=str, required=True,)
     parser.add_argument('-m', '--model', help='Path to a model',
                         default='styleaug/saved_models/mosaic.pth', type=str)
     parser.add_argument('-a', '--method-args', help='Method to be choosen all, traditional, etc..',
                         default='all', type=str)
-    parser.add_argument("-s", "--style-alpha", default=1, type=float,
+    parser.add_argument("-s", "--style-alpha",  default=1, type=float,
                         help="set it to 1 for running on GPU, 0 for CPU")
+
 
     parser.add_argument("-c", "--cuda", type=int, default=False,
                         help="set it to 1 for running on GPU, 0 for CPU")
 
     args = parser.parse_args()
+    ensure_directory(args.out_path)
 
-    args.out_path = create_out_tub_path(args)
+    #TODO: cuda beeing load
 
-    # TODO: Cuda being loaded
-    augment(args.target_path, args.out_path, args.method_args, args)
+    if args.out_path and args.target_path is not args.out_path and not is_empty(args.out_path):
+        print(' Target folder "%s" must be empty' % args.out_path)
+    else:
+        # TODO: add args
+        augment(args.target_path, args.out_path, args.method_args, args)
