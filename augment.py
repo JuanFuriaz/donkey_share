@@ -48,6 +48,8 @@ from styleaug.cv import ImgCanny
 from styleaug import neural_style
 
 from styleaug.cv_stylaug import ImgStyleAug
+from styleaug.cv import ImgCrop
+import random
 
 
 def ensure_directory(directory):
@@ -378,6 +380,19 @@ def augment_canny(img, data):
     return img, data
 
 
+# crop
+def augment_crop(img, data):
+    
+    # randomize crop area (percent)
+    top_per = random.randint(20,40)
+    left_per = random.randint(0,10)
+    right_per = random.randint(0,10)
+    
+    crop = ImgCrop(top_percent=top_per, bottom_percent=0, left_percent=left_per, right_percent=right_per)
+    img = crop.run(img)
+    return img, data
+
+
 def augment(target, out=None, method_args='all', args=None):
     print('Start augmentation')
 
@@ -402,7 +417,8 @@ def augment(target, out=None, method_args='all', args=None):
         sum = sum + 1
 
     count = sum
-    init_path = out
+    #init_path = out
+    init_path = target
 
     # TODO: Manuel why giving the path of the other methods like history?
     if 'all' in method_args or 'classic' in method_args:
@@ -427,6 +443,10 @@ def augment(target, out=None, method_args='all', args=None):
 
     if 'all' in method_args or 'canny' in method_args:
         size, canny = augmentation_round(init_path, out, count, 'canny', augment_canny)
+        count = count + size
+        
+    if 'all' in method_args or 'crop' in method_args:
+        size, crop = augmentation_round(init_path, out, count, 'crop', augment_crop)
         count = count + size
 
     if 'all' in method_args or 'style_aug' in method_args:

@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 class ImgGreyscale():
 
@@ -40,17 +41,21 @@ class ImgCrop:
     """
     Crop an image to an area of interest. 
     """
-    def __init__(self, top=0, bottom=0, left=0, right=0):
-        self.top = top
-        self.bottom = bottom
-        self.left = left
-        self.right = right
+    def __init__(self, top_percent=0, bottom_percent=0, left_percent=0, right_percent=0):
+        self.top_percent = top_percent
+        self.bottom_percent = bottom_percent
+        self.left_percent = left_percent
+        self.right_percent = right_percent
         
     def run(self, img_arr):
-        #height, width, _ = img_arr.shape
-        height, width = img_arr.shape
-        img_arr = img_arr[self.top:height-self.bottom, 
-                          self.left: width-self.right]
+        height, width, _ = img_arr.shape
+        #height, width = img_arr.shape
+        top = math.ceil(self.top_percent*height/100)
+        bottom = math.ceil(self.bottom_percent*height/100)
+        left = math.ceil(self.left_percent*width/100)
+        right = math.ceil(self.right_percent*width/100)
+        img_arr = img_arr[top:height-bottom, 
+                          left: width-right]
         return img_arr
 
 
