@@ -16,216 +16,88 @@ rm_location GL_ARB_fragment_coord_conventions GL_ARB_fragment_layer_viewport GL_
 RB_shader_image_load_store GL_ARB_shader_image_size GL_ARB_shader_objects GL_ARB_shader_precision GL_ARB_shader_stencil_export GL_ARB_shader_storage_buffer_object GL_ARB_shader_subroutine GL_ARB_shader_texture_image_samples GL_ARB_shader_texture_lod GL_ARB_shading_language_420pack GL_ARB_shading_language_packing GL_ARB_stencil_texturing GL_ARB_sync GL_ARB_tessellation_shader GL_ARB_texture_barrier GL_ARB_texture_buffer_object GL_ARB_texture_buffer_object_rgb32 GL_ARB_texture_buffer_range GL_ARB_texture_compression_bptc GL_ARB_texture_compression_rgtc GL_ARB_texture_cube_map_array GL_ARB_texture_float GL_ARB_texture_gather GL_ARB_texture_mirror_clamp_to_edge GL_ARB_texture_multisample GL_ARB_texture_non_power_of_two GL_ARB_texture_query_levels GL_ARB_texture_query_lod GL_ARB_texture_rectangle GL_ARB_texture_rg GL_ARB_texture_rgb10_a2ui GL_ARB_texture_stencil8 GL_ARB_texture_storage GL_ARB_texture_storage_multisample GL_ARB_texture_swizzle GL_ARB_texture_view GL_ARB_timer_query GL_ARB_transform_feedback2 GL_AR
 B_transform_feedback3 GL_ARB_transform_feedback_instanced GL_ARB_uniform_buffer_object GL_ARB_vertex_array_bgra GL_ARB_vertex_array_object GL_ARB_vertex_attrib_64bit GL_ARB_vertex_attrib_binding GL_ARB_vertex_shader GL_ARB_vertex_type_10f_11f_11f_rev GL_ARB_vertex_type_2_10_10_10_rev GL_ARB_viewport_array GL_ATI_blend_equation_separate GL_ATI_texture_float GL_EXT_abgr GL_EXT_blend_equation_separate GL_EXT_draw_buffers2 GL_EXT_draw_instanced GL_EXT_framebuffer_blit GL_EXT_framebuffer_multisample GL_EXT_framebuffer_multisample_blit_scaled GL_EXT_framebuffer_sRGB GL_EXT_packed_depth_stencil GL_EXT_packed_float GL_EXT_pixel_buffer_object GL_EXT_polygon_offset_clamp GL_EXT_provoking_vertex GL_EXT_shader_integer_mix GL_EXT_shader_samples_identical GL_EXT_texture_array GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc GL_EXT_texture_filter_anisotropic GL_EXT_texture_integer GL_EXT_texture_sRGB GL_EXT_texture_sRGB_decode GL_EXT_texture_shared_exponent GL_EXT_texture_snor
 m GL_EXT_texture_swizzle GL_EXT_timer_query GL_EXT_transform_feedback GL_EXT_vertex_array_bgra GL_IBM_multimode_draw_arrays GL_KHR_context_flush_control GL_KHR_debug GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_MESA_pack_invert GL_MESA_texture_signed_rgba GL_NV_conditional_render GL_NV_depth_clamp GL_NV_packed_depth_stencil GL_NV_texture_barrier GL_OES_EGL_image GL_OES_read_format GL_S3_s3tc
-OPENGL LOG: Creating OpenGL 4.3 graphics device ; Context level  <OpenGL 4.3> ; Context handle 56377792
+OPENGL LOG: Creating OpenGL 4.3 graphics device ; Context level  <OpenGL 4.3> ; Context handle 61185872
 Begin MonoManager ReloadAssembly
-- Completed reload, in  0,048 seconds
+- Completed reload, in  0,050 seconds
 Default vsync count 0
 requesting resize 1024 x 768
 resizing window to 1024 x 768
 Desktop is 1920 x 1080 @ 60 Hz
-UnloadTime: 0,734000 ms
+UnloadTime: 0,731000 ms
 Setting up 2 worker threads for Enlighten.
-  Thread -> id: 7fc7f2df5700 -> priority: 1 
-  Thread -> id: 7fc7f25f4700 -> priority: 1 
+  Thread -> id: 7f9ca7fff700 -> priority: 1 
+  Thread -> id: 7f9ca77fe700 -> priority: 1 
 Unloading 7 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 8,823000 ms
+UnloadTime: 8,699000 ms
 loading: racePi2
  
 (Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
 
 
 Unloading 8 unused Assets to reduce memory usage. Loaded Objects now: 1668.
-Total: 1,655000 ms (FindLiveObjects: 1,049000 ms CreateObjectMapping: 0,058000 ms MarkObjects: 0,525000 ms  DeleteObjects: 0,022000 ms)
-
-Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 1,204000 ms
-
-Unloading 331 unused Assets to reduce memory usage. Loaded Objects now: 625.
-Total: 1,194000 ms (FindLiveObjects: 0,478000 ms CreateObjectMapping: 0,032000 ms MarkObjects: 0,311000 ms  DeleteObjects: 0,373000 ms)
-
-Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0,653000 ms
-found 522 path points. to load
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 3958.
-Total: 2,202000 ms (FindLiveObjects: 0,965000 ms CreateObjectMapping: 0,070000 ms MarkObjects: 1,142000 ms  DeleteObjects: 0,024000 ms)
-
-Unloading 7 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 5,653000 ms
-loading: racePi2
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 65 unused Assets to reduce memory usage. Loaded Objects now: 1672.
-Total: 2,460000 ms (FindLiveObjects: 0,873000 ms CreateObjectMapping: 0,176000 ms MarkObjects: 1,123000 ms  DeleteObjects: 0,288000 ms)
-
-Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 1,144000 ms
-
-Unloading 331 unused Assets to reduce memory usage. Loaded Objects now: 629.
-Total: 1,580000 ms (FindLiveObjects: 0,667000 ms CreateObjectMapping: 0,043000 ms MarkObjects: 0,370000 ms  DeleteObjects: 0,499000 ms)
-
-Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0,513000 ms
-found 522 path points. to load
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 3958.
-Total: 2,058000 ms (FindLiveObjects: 0,818000 ms CreateObjectMapping: 0,056000 ms MarkObjects: 1,157000 ms  DeleteObjects: 0,027000 ms)
-
-Unloading 7 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 3,133000 ms
-loading: racePi2
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 65 unused Assets to reduce memory usage. Loaded Objects now: 1672.
-Total: 2,738000 ms (FindLiveObjects: 1,066000 ms CreateObjectMapping: 0,201000 ms MarkObjects: 1,183000 ms  DeleteObjects: 0,288000 ms)
-
-Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 1,445000 ms
-
-Unloading 331 unused Assets to reduce memory usage. Loaded Objects now: 629.
-Total: 2,423000 ms (FindLiveObjects: 0,820000 ms CreateObjectMapping: 0,067000 ms MarkObjects: 0,746000 ms  DeleteObjects: 0,789000 ms)
-
-Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0,517000 ms
-found 522 path points. to load
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 3958.
-Total: 1,890000 ms (FindLiveObjects: 0,803000 ms CreateObjectMapping: 0,053000 ms MarkObjects: 1,009000 ms  DeleteObjects: 0,025000 ms)
-
-Unloading 7 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 3,126000 ms
-loading: racePi2
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 65 unused Assets to reduce memory usage. Loaded Objects now: 1672.
-Total: 2,240000 ms (FindLiveObjects: 0,742000 ms CreateObjectMapping: 0,049000 ms MarkObjects: 1,067000 ms  DeleteObjects: 0,381000 ms)
-
-Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 1,463000 ms
-
-Unloading 331 unused Assets to reduce memory usage. Loaded Objects now: 629.
-Total: 2,490000 ms (FindLiveObjects: 1,178000 ms CreateObjectMapping: 0,052000 ms MarkObjects: 0,527000 ms  DeleteObjects: 0,732000 ms)
-
-Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0,685000 ms
-found 522 path points. to load
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 3958.
-Total: 1,900000 ms (FindLiveObjects: 0,780000 ms CreateObjectMapping: 0,053000 ms MarkObjects: 1,042000 ms  DeleteObjects: 0,024000 ms)
+Total: 1,539000 ms (FindLiveObjects: 0,865000 ms CreateObjectMapping: 0,051000 ms MarkObjects: 0,599000 ms  DeleteObjects: 0,024000 ms)
 
 Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 3,019000 ms
-found 522 path points. to load
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 9 unused Assets to reduce memory usage. Loaded Objects now: 3958.
-Total: 2,736000 ms (FindLiveObjects: 1,181000 ms CreateObjectMapping: 0,056000 ms MarkObjects: 1,325000 ms  DeleteObjects: 0,172000 ms)
-
-Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 4,618000 ms
-found 522 path points. to load
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 9 unused Assets to reduce memory usage. Loaded Objects now: 3958.
-Total: 2,762000 ms (FindLiveObjects: 1,095000 ms CreateObjectMapping: 0,150000 ms MarkObjects: 1,377000 ms  DeleteObjects: 0,139000 ms)
-
-Unloading 7 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 2,233000 ms
-loading: racePi2
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 60 unused Assets to reduce memory usage. Loaded Objects now: 1436.
-Total: 2,103000 ms (FindLiveObjects: 1,241000 ms CreateObjectMapping: 0,043000 ms MarkObjects: 0,613000 ms  DeleteObjects: 0,205000 ms)
-
-Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 1,334000 ms
-
-Unloading 336 unused Assets to reduce memory usage. Loaded Objects now: 629.
-Total: 2,950000 ms (FindLiveObjects: 1,367000 ms CreateObjectMapping: 0,061000 ms MarkObjects: 0,617000 ms  DeleteObjects: 0,905000 ms)
-
-Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0,537000 ms
-found 522 path points. to load
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 3958.
-Total: 1,953000 ms (FindLiveObjects: 0,799000 ms CreateObjectMapping: 0,059000 ms MarkObjects: 1,062000 ms  DeleteObjects: 0,032000 ms)
-
-Unloading 7 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 3,094000 ms
-loading: racePi2
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 65 unused Assets to reduce memory usage. Loaded Objects now: 1672.
-Total: 2,222000 ms (FindLiveObjects: 0,765000 ms CreateObjectMapping: 0,051000 ms MarkObjects: 0,978000 ms  DeleteObjects: 0,427000 ms)
-
-Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 1,531000 ms
-
-Unloading 331 unused Assets to reduce memory usage. Loaded Objects now: 629.
-Total: 2,475000 ms (FindLiveObjects: 0,991000 ms CreateObjectMapping: 0,061000 ms MarkObjects: 0,666000 ms  DeleteObjects: 0,757000 ms)
-
-Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0,662000 ms
-loading: racePi2
- 
-(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
-
-
-Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 1424.
-Total: 1,072000 ms (FindLiveObjects: 0,500000 ms CreateObjectMapping: 0,034000 ms MarkObjects: 0,523000 ms  DeleteObjects: 0,015000 ms)
-
-Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0,879000 ms
+UnloadTime: 1,247000 ms
 found 522 path points. to load
  
 (Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
 
 
 Unloading 13 unused Assets to reduce memory usage. Loaded Objects now: 3958.
-Total: 2,311000 ms (FindLiveObjects: 1,012000 ms CreateObjectMapping: 0,073000 ms MarkObjects: 1,171000 ms  DeleteObjects: 0,055000 ms)
+Total: 1,804000 ms (FindLiveObjects: 0,776000 ms CreateObjectMapping: 0,056000 ms MarkObjects: 0,922000 ms  DeleteObjects: 0,050000 ms)
 
-Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 5,338000 ms
+Unloading 4 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 7,191000 ms
 
 Unloading 384 unused Assets to reduce memory usage. Loaded Objects now: 630.
-Total: 4,361000 ms (FindLiveObjects: 0,587000 ms CreateObjectMapping: 0,042000 ms MarkObjects: 2,168000 ms  DeleteObjects: 1,563000 ms)
+Total: 3,988000 ms (FindLiveObjects: 0,630000 ms CreateObjectMapping: 0,193000 ms MarkObjects: 2,598000 ms  DeleteObjects: 0,567000 ms)
 
 Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0,508000 ms
+UnloadTime: 0,718000 ms
 loading: racePi2
  
 (Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
 
 
 Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 1424.
-Total: 1,602000 ms (FindLiveObjects: 0,774000 ms CreateObjectMapping: 0,052000 ms MarkObjects: 0,754000 ms  DeleteObjects: 0,022000 ms)
+Total: 1,211000 ms (FindLiveObjects: 0,559000 ms CreateObjectMapping: 0,041000 ms MarkObjects: 0,592000 ms  DeleteObjects: 0,018000 ms)
+
+Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 4,543000 ms
+
+Unloading 12 unused Assets to reduce memory usage. Loaded Objects now: 2645.
+Total: 2,641000 ms (FindLiveObjects: 1,409000 ms CreateObjectMapping: 0,113000 ms MarkObjects: 1,050000 ms  DeleteObjects: 0,067000 ms)
+
+Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 1,456000 ms
+
+Unloading 326 unused Assets to reduce memory usage. Loaded Objects now: 629.
+Total: 1,726000 ms (FindLiveObjects: 0,520000 ms CreateObjectMapping: 0,042000 ms MarkObjects: 0,719000 ms  DeleteObjects: 0,445000 ms)
+
+Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 0,489000 ms
+loading: racePi2
+ 
+(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
+
+
+Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 1424.
+Total: 1,074000 ms (FindLiveObjects: 0,527000 ms CreateObjectMapping: 0,038000 ms MarkObjects: 0,494000 ms  DeleteObjects: 0,015000 ms)
+
+Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 0,936000 ms
+
+Unloading 331 unused Assets to reduce memory usage. Loaded Objects now: 629.
+Total: 1,489000 ms (FindLiveObjects: 0,534000 ms CreateObjectMapping: 0,052000 ms MarkObjects: 0,479000 ms  DeleteObjects: 0,424000 ms)
+
+Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 0,959000 ms
+loading: racePi2
+ 
+(Filename: ./Runtime/Export/Debug.bindings.h Line: 43)
+
+
+Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 1424.
+Total: 1,586000 ms (FindLiveObjects: 0,797000 ms CreateObjectMapping: 0,056000 ms MarkObjects: 0,701000 ms  DeleteObjects: 0,030000 ms)
 
