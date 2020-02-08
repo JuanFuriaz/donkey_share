@@ -1,17 +1,30 @@
-from tensorflow.keras.layers import Input
-from tensorflow.keras.models import Model, load_model
-from tensorflow.keras.layers import Convolution2D
+import matplotlib.pyplot as plt
+from matplotlib import animation
+
+try:
+    from tensorflow.keras.layers import Input
+    from tensorflow.keras.models import Model, load_model
+    from tensorflow.keras.layers import Convolution2D
+    from keras import backend as K
+    plt.rcParams['animation.ffmpeg_path'] = '/home/jm/bin/ffmpeg' # explicit path for finding ffmpeg in my computer
+except ImportError:
+    from tensorflow.python.keras.layers import Input
+    from tensorflow.python.keras.models import Model, load_model
+    from tensorflow.python.keras.layers import Convolution2D
+    from tensorflow.python.keras import backend as K
+
+
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # disabling TF warnings
 import tensorflow as tf
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from matplotlib import animation
 from glob import glob
-from keras import backend as K
+#from keras import backend as K
 import argparse
-plt.rcParams['animation.ffmpeg_path'] = '/home/jm/bin/ffmpeg' # explicit path for finding ffmpeg in my computer
+#plt.rcParams['animation.ffmpeg_path'] = '/home/jm/bin/ffmpeg' # explicit path for finding ffmpeg in my computer
 
 
 def compute_visualisation_mask(img, functor, layers_kernels, layers_strides):
