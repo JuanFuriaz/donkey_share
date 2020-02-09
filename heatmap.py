@@ -83,6 +83,7 @@ def get_video_array(video_limit=500, data_path = 'my/path/to/imgs/*.jpg', functo
     counter = 0
     for path in sorted(glob(data_path), key=numericalSort):
         img = cv2.imread(path)
+        img = img[:, :, ::-1]
         salient_mask = compute_visualisation_mask(img, functor, layers_kernels, layers_strides)
         salient_mask_stacked = np.dstack((salient_mask,salient_mask))
         salient_mask_stacked = np.dstack((salient_mask_stacked,salient_mask))

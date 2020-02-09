@@ -1,9 +1,12 @@
 """
 Script to augment teaching data
-version 1.4
+version 1.5
 -Folder's processing changed
     - don't make copy of original file
     - create automatically folder if not existing with the tub's name being used (example: tub_10-22-12_candy)
+    - Correct CV problem RGB
+    - Merged with manuels and juans versions
+
 
 Usage:
     augment.py --path=<records_dir> --out=<target_dir> [--method=all|classic|gaussian|threshold|canny|style_aug] --gpu_enabled=1
@@ -189,90 +192,6 @@ def augment_history(img, data):
 
     return img, data_with_history
 
-
-def aug_flip(inputs, outputs):
-    img = inputs[0]
-    img = cv2.flip(img, 1)
-
-    augmented_outputs = [-outputs[0], outputs[1]]
-    augmented_inputs = copy.deepcopy(inputs)
-    augmented_inputs[0] = img
-    return augmented_inputs, augmented_outputs
-
-
-def aug_brightness(inputs, outputs):
-    img = inputs[0]
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    img = np.array(img, dtype=np.float64)
-    random_bright = .5 + np.random.uniform()
-    img[:, :, 2] = img[:, :, 2] * random_bright
-    img[:, :, 2][img[:, :, 2] > 255] = 255
-    img = np.array(img, dtype=np.uint8)
-    img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
-
-    augmented_inputs = copy.deepcopy(inputs)
-    augmented_inputs[0] = img
-    return augmented_inputs, outputs
-
-
-def aug_shadow(inputs, outputs):
-    img = inputs[0]
-
-    top_y = 320 * np.random.uniform()
-    top_x = 0
-    bot_x = 160
-    bot_y = 320 * np.random.uniform()
-    image_hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-    shadow_mask = 0 * image_hls[:, :, 1]
-    X_m = np.mgrid[0:img.shape[0], 0:img.shape[1]][0]
-    Y_m = np.mgrid[0:img.shape[0], 0:img.shape[1]][1]
-
-    shadow_mask[((X_m - top_x) * (bot_y - top_y) - (bot_x - top_x) * (Y_m - top_y) >= 0)] = 1
-    # random_bright = .25+.7*np.random.uniform()
-    if np.random.randint(2) == 1:
-        random_bright = .5
-        cond1 = shadow_mask == 1
-        cond0 = shadow_mask == 0
-        if np.random.randint(2) == 1:
-            image_hls[:, :, 1][cond1] = image_hls[:, :, 1][cond1] * random_bright
-        else:
-            image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0] * random_bright
-    img = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
-
-    augmented_inputs = copy.deepcopy(inputs)
-    augmented_inputs[0] = img
-    return augmented_inputs, outputs
-
-
-def aug_shadow2(inputs, outputs):
-    img = cv2.cvtColor(inputs[0], cv2.COLOR_BGR2HSV)
-    img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
-
-    top_y = 320 * np.random.uniform()
-    top_x = 0
-    bot_x = 160
-    bot_y = 320 * np.random.uniform()
-    image_hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
-    shadow_mask = image_hls[:, :, 1] * 0
-    X_m = np.mgrid[0:img.shape[0], 0:img.shape[1]][0]
-    Y_m = np.mgrid[0:img.shape[0], 0:img.shape[1]][1]
-
-    shadow_mask[((X_m - top_x) * (bot_y - top_y) - (bot_x - top_x) * (Y_m - top_y) >= 0)] = 1
-    # random_bright = .25+.7*np.random.uniform()
-    # if np.random.randint(2) == 1:
-    random_bright = .4
-    random_bright2 = .2
-    cond = shadow_mask == np.random.randint(2)
-    image_hls[:, :, 0][cond] = image_hls[:, :, 0][cond] * random_bright
-    image_hls[:, :, 1][cond] = image_hls[:, :, 1][cond] * random_bright
-    image_hls[:, :, 2][cond] = image_hls[:, :, 2][cond] * random_bright2
-    img = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
-
-    augmented_inputs = copy.deepcopy(inputs)
-    augmented_inputs[0] = img
-    return augmented_inputs, outputs
-
-
 def augment_flip(img, data):
     data = copy.deepcopy(data)
     img = cv2.flip(img, 1)
@@ -302,19 +221,41 @@ def augment_flip(img, data):
     # data['history/sonar/left'] = data['history/sonar/right']
     # data['history/sonar/right'] = old_sonar_history_left
 
+    img = img[:, :, ::-1]
     return img, data
 
-
-def augment_brightness (img, data):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+def augment_redness (img, data):
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
     img = np.array(img, dtype=np.float64)
     random_bright = .2 + np.random.uniform()
     img[:, :, 2] = img[:, :, 2] * random_bright
     img[:, :, 2][img[:, :, 2] > 255] = 255
     img = np.array(img, dtype=np.uint8)
-    img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
-
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
+    #img = img[:, :, ::-1]
     return img, data
+
+def augment_whiteness(img, data):
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2HLS)
+    img = np.array(img, dtype=np.float64)
+    random_bright = .1 + np.random.uniform()
+    img[:, :, 2] = img[:, :, 2] * random_bright
+    img[:, :, 2][img[:, :, 2] > 255] = 255
+    img = np.array(img, dtype=np.uint8)
+    img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
+    img = img[:, :, ::-1]
+    return img, data
+
+def augment_brightness(img, data):
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+    img = np.array(img, dtype = np.float64)
+    random_bright = .1+np.random.uniform()
+    img[:,:,2] = img[:,:,2]*random_bright
+    img[:,:,2][img[:,:,2]>255]  = 255
+    img = np.array(img, dtype = np.uint8)
+    img = cv2.cvtColor(img,cv2.COLOR_HSV2BGR)
+    img = img[:, :, ::-1]
+    return (img, data)
 
 
 def augment_shadow(img, data):
@@ -338,8 +279,37 @@ def augment_shadow(img, data):
         else:
             image_hls[:, :, 1][cond0] = image_hls[:, :, 1][cond0] * random_bright
     img = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
+    img = img[:,:,::-1]
     return img, data
 
+
+def aug_shadow2(inputs, outputs):
+    img = cv2.cvtColor(inputs[0], cv2.COLOR_BGR2HSV)
+    img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
+
+    top_y = 320 * np.random.uniform()
+    top_x = 0
+    bot_x = 160
+    bot_y = 320 * np.random.uniform()
+    image_hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
+    shadow_mask = image_hls[:, :, 1] * 0
+    X_m = np.mgrid[0:img.shape[0], 0:img.shape[1]][0]
+    Y_m = np.mgrid[0:img.shape[0], 0:img.shape[1]][1]
+
+    shadow_mask[((X_m - top_x) * (bot_y - top_y) - (bot_x - top_x) * (Y_m - top_y) >= 0)] = 1
+    # random_bright = .25+.7*np.random.uniform()
+    # if np.random.randint(2) == 1:
+    random_bright = .4
+    random_bright2 = .2
+    cond = shadow_mask == np.random.randint(2)
+    image_hls[:, :, 0][cond] = image_hls[:, :, 0][cond] * random_bright
+    image_hls[:, :, 1][cond] = image_hls[:, :, 1][cond] * random_bright
+    image_hls[:, :, 2][cond] = image_hls[:, :, 2][cond] * random_bright2
+    img = cv2.cvtColor(image_hls, cv2.COLOR_HLS2BGR)
+
+    augmented_inputs = copy.deepcopy(inputs)
+    augmented_inputs[0] = img
+    return augmented_inputs, outputs
 
 #
 # customer defined functions
@@ -430,6 +400,8 @@ def augment(target, out=None, method_args='all', args=None):
         count = count + size
         size, bright_path = augmentation_round(init_path, out, count, 'bright', augment_brightness)
         count = count + size
+        ##size, bright_path = augmentation_round(init_path, out, count, 'red', augment_redness)
+       # count = count + size
         size, shadow_path = augmentation_round(init_path, out, count, 'shadow', augment_shadow)
         count = count + size
 
