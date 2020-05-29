@@ -23,6 +23,7 @@ MODELS_PATH = os.path.join(CAR_PATH, 'models')
 #VEHICLE
 DRIVE_LOOP_HZ = 20      # the vehicle loop will pause if faster than this speed.
 MAX_LOOPS = None        # the vehicle loop can abort after this many iterations, when given a positive integer.
+#MAX_LOOPS = 200
 
 #CAMERA
 CAMERA_TYPE = "PICAM"   # (PICAM|WEBCAM|CVCAM|CSIC|V4L|MOCK)
@@ -75,10 +76,11 @@ HBRIDGE_PIN_RIGHT_BWD = 13
 #between different neural network designs. You can override this setting by passing the command
 #line parameter --type to the python manage.py train and drive commands.
 DEFAULT_MODEL_TYPE = 'linear'   #(linear|categorical|rnn|imu|behavior|3d|localizer|latent)
-BATCH_SIZE = 128                #how many records to use when doing one pass of gradient decent. Use a smaller number if your gpu is running out of memory.
+#BATCH_SIZE = 128                #how many records to use when doing one pass of gradient decent. Use a smaller number if your gpu is running out of memory.
+BATCH_SIZE = 10
 TRAIN_TEST_SPLIT = 0.8          #what percent of records to use for training. the remaining used for validation.
 MAX_EPOCHS = 100                #how many times to visit all records of your data
-SHOW_PLOT = True                #would you like to see a pop up display of final loss?
+SHOW_PLOT = False                #would you like to see a pop up display of final loss?
 VEBOSE_TRAIN = True             #would you like to see a progress bar with text during training?
 USE_EARLY_STOP = True           #would you like to stop the training if we see it's not improving fit?
 EARLY_STOP_PATIENCE = 5         #how many epochs to wait before no improvement
@@ -235,3 +237,59 @@ RESET_ORIGIN_BTN = "triangle"       # joystick button to press to move car back 
 CAMERA_RESOLUTION = (120, 160) #(height, width)
 CAR_PATH = PACKAGE_PATH = os.path.dirname(os.path.realpath(__file__))
 TUB_PATH = os.path.join(CAR_PATH, 'tub') # if using a single tub
+
+# special parameters for reinforcement learning scripts
+LOG_INTERVAL = 1
+VERBOSE = 1
+LEARNING_RATE = 3e-4
+#LEARNING_RATE = 6e-4
+ENT_COEF = 'auto_0.1'
+TRAIN_FREQ = 1
+BATCH_SIZE = 64
+GRADIENT_STEPS = 800
+#GRADIENT_STEPS = 100
+
+#GRADIENT_STEPS = 60
+
+#LEARNING_STARTS = 300
+LEARNING_STARTS = 10
+BUFFER_SIZE = 30000
+VARIANTS_SIZE = 32
+IMAGE_CHANNELS = 3
+#HyperParameter for Reward
+N_COMMAND_HISTORY = 10
+REWARD_CRASH = -10
+CRASH_REWARD_WEIGHT = 5
+THROTTLE_REWARD_WEIGHT = 0.1
+#TIME_STEPS = 5000
+# for lvl 1
+TIME_STEPS = 500
+#TIME_STEPS = 60
+#TIME_STEPS = 5000
+
+# Agent settings
+#MIN_STEERING = -0.1
+#MAX_STEERING = 0.5
+
+MIN_STEERING = -0.3
+MAX_STEERING = 0.3
+
+#MIN_STEERING = -1
+#MAX_STEERING = 1
+
+MIN_THROTTLE = 0.1
+MAX_THROTTLE = 0.25
+MAX_STEERING_DIFF = 0.15
+#JERK_REWARD_WEIGHT = 0.1
+JERK_REWARD_WEIGHT = 0
+NEGATIVE_REWARD_WEIGHT = 1
+#POSITIVE_REWARD_WEIGHT = 0.5
+POSITIVE_REWARD_WEIGHT = 1
+# learning from user-actions
+LEARN_FROM_USER = True
+
+# Vae settings
+VARIANTS_SIZE = 32
+IMAGE_CHANNELS = 3
+#N_COMMAND_HISTORY = 100
+

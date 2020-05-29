@@ -23,6 +23,8 @@ import tornado.gen
 
 from ... import utils
 
+#reinforcement = None
+
 
 class RemoteWebServer():
     '''
@@ -109,6 +111,8 @@ class LocalWebController(tornado.web.Application):
         Create and publish variables needed on many of 
         the web handlers.
         '''
+        #global reinforcement
+        #reinforcement = r
 
         print('Starting Donkey Server...')
 
@@ -168,6 +172,12 @@ class DriveAPI(tornado.web.RequestHandler):
         self.application.throttle = data['throttle']
         self.application.mode = data['drive_mode']
         self.application.recording = data['recording']
+        
+        #print('TEST' + self.application.mode)
+        #if self.application.mode == 'user':
+            #print('Set stopping...')
+            #reinforcement.stop_received()
+        
 
 
 class VideoAPI(tornado.web.RequestHandler):

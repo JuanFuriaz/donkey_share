@@ -643,6 +643,7 @@ class JoystickController(object):
     ES_THROTTLE_NEG_ONE = 1
     ES_THROTTLE_POS_ONE = 2
     ES_THROTTLE_NEG_TWO = 3
+    reinforcement = None
 
 
     def __init__(self, poll_delay=0.0,
@@ -893,6 +894,9 @@ class JoystickController(object):
             self.mode = 'local'
         else:
             self.mode = 'user'
+            if reinforcement:
+                reinforcement.stop_received()
+            
         print('new mode:', self.mode)
 
 
@@ -906,6 +910,13 @@ class JoystickController(object):
 
     def chaos_monkey_off(self):
         self.chaos_monkey_steering = None
+        
+    def set_reinforcement(reinforcement):
+      self.reinforcement = reinforcement
+      
+    def do_reward():
+        if reinforcement:
+            reinforcement.positive_reward_received()
 
 
     def run_threaded(self, img_arr=None):
@@ -1021,6 +1032,7 @@ class PS3JoystickController(JoystickController):
         self.button_up_trigger_map = {
             "R1" : self.chaos_monkey_off,
             "L1" : self.chaos_monkey_off,
+            "R2" : self.do_reward,
         }
 
         self.axis_trigger_map = {

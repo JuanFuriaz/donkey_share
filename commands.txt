@@ -33,3 +33,46 @@ git pull
 pip install -e .[pi]   # or [pc]
 cd ~/mycar
 donkey update
+
+
+
+ 1730  conda activate donkey
+ 1731  exit
+ 1732  conda activate donkey
+ 1733  ls
+ 1734  cd donkey_car/
+ 1735  ls
+ 1736  cd donkey_share_02_02_20/
+ 1737  ls
+ 1738  cd donkey_share/
+ 1739  ls
+ 1740  cd simulator/
+ 1741  python manage.py drive
+ 1742  cd donkey_car/
+ 1743  ls
+
+ 
+ 
+python manage.py drive --model ~/Documents/research/self-driving-car/donkeycar/mycar/models/m_3.h5
+
+
+python manage.py drive --model models/simulator_manuel_augmented_style_19_01_20.h5
+
+
+
+python manage_reinforcement_learning.py train_reinforcement --model models/model_simulator_reinforcement2.h5 
+
+python manage_reinforcement_learning.py drive_reinforcement --model models/model_simulator_reinforcement.h5 
+
+
+
+#reinforcement learning 
+
+python manage_reinforcement_learning.py train_vae
+
+python manage_reinforcement_learning.py train_reinforcement --model models/model_simulator_reinforcement2.h5 --vae vae_level0_20_05-25.torch
+
+python manage_reinforcement_learning.py drive_reinforcement --model models/model_simulator_reinforcement2.h5 --vae vae_level0_20_05-25.torch
+
+
+

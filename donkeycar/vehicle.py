@@ -13,6 +13,7 @@ from .memory import Memory
 from prettytable import PrettyTable
 
 
+
 class PartProfiler:
     def __init__(self):
         self.records = {}
@@ -52,6 +53,7 @@ class PartProfiler:
 
 
 class Vehicle:
+    threads_started = 0
     def __init__(self, mem=None):
 
         if not mem:
@@ -104,7 +106,7 @@ class Vehicle:
         """
         self.parts.remove(part)
 
-    def start(self, rate_hz=10, max_loop_count=None, verbose=False):
+    def start(self, rate_hz=10, max_loop_count=None, verbose=False, reinforcement=None):
         """
         Start vehicle's main drive loop.
 
@@ -137,10 +139,18 @@ class Vehicle:
 
             loop_count = 0
             while self.on:
+                #print('TEST')
                 start_time = time.time()
                 loop_count += 1
 
                 self.update_parts()
+                
+                if reinforcement:
+                    if reinforcement.is_stopped():
+                        self.stop()
+                        return
+		  
+                    reinforcement.lifetime_reward()
 
                 # stop drive loop if loop_count exceeds max_loopcount
                 if max_loop_count and loop_count > max_loop_count:
@@ -182,6 +192,7 @@ class Vehicle:
                 self.profiler.on_part_start(p)
                 # get inputs from memory
                 inputs = self.mem.get(entry['inputs'])
+                #print('INPUTS: %s'%inputs)
                 # run the part
                 if entry.get('thread'):
                     outputs = p.run_threaded(*inputs)
