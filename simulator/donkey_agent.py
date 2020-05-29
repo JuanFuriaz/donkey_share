@@ -246,16 +246,6 @@ class DonkeyAgent(gym.Env):
                 self.last_user_action = [steering,throttle]
                 print('self.last_user_action: ' + str(self.last_user_action ))
                 return
-                
-            # Clip steering angle rate to enforce continuity
-            # TODO: enable and check this
-            if True and len(self.command_history) > 0:
-                #print("COMMAND_HIST:%s"%str(self.command_history))
-                prev_steering = (self.command_history[-1])['angle']
-                print('PREV_STEERING:%s'%str(prev_steering))
-                max_diff = (MAX_STEERING_DIFF - 1e-5) * (MAX_STEERING - MIN_STEERING)
-                diff = np.clip(action[0] - prev_steering, -max_diff, max_diff)
-                action[0] = prev_steering + diff                
 
                 
             self.controller.throttle = action[1]
@@ -280,6 +270,17 @@ class DonkeyAgent(gym.Env):
         return [seed]
 
     def step(self, action):
+        
+        # Clip steering angle rate to enforce continuity
+        if True and len(self.command_history) > 0:
+                #print("COMMAND_HIST:%s"%str(self.command_history))
+                prev_steering = (self.command_history[-1])['angle']
+                print('PREV_STEERING:%s'%str(prev_steering))
+                max_diff = (MAX_STEERING_DIFF - 1e-5) * (MAX_STEERING - MIN_STEERING)
+                diff = np.clip(action[0] - prev_steering, -max_diff, max_diff)
+                action[0] = prev_steering + diff                
+
+        
         for i in range(self.frame_skip):
             self.viewer_take_action(action)
             observation, reward, done, info = self.viewer_observe(action)
