@@ -92,7 +92,7 @@ class CustomSAC(SAC):
 
             for step in range(total_timesteps):
                 
-                time.sleep(0.5)
+                time.sleep(0.05)
                 if callback is not None:
                     # Only stop training if return value is False, not when it is None. This is for backwards
                     # compatibility with callbacks that have no return statement.
@@ -157,17 +157,6 @@ class CustomSAC(SAC):
                     self.episode_reward = total_episode_reward_logger(self.episode_reward, ep_reward,
                                                                       ep_done, writer, self.num_timesteps)
                     
-                    
-                    
-                '''
-                print('LEARNING..')
-                mb_infos_vals = []
-                # Compute current learning_rate
-                frac = 1.0 - step / total_timesteps
-                current_lr = self.learning_rate(frac)
-                mb_infos_vals.append(self._train_step(step, writer, current_lr))
-                self.sess.run(self.target_update_op)
-                '''
                 
     
                 

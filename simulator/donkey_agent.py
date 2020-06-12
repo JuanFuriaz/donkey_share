@@ -49,6 +49,7 @@ class DonkeyAgent(gym.Env):
 	
     vae = None
     device = None
+    best_lifetime = 0
 
     
 
@@ -122,21 +123,13 @@ class DonkeyAgent(gym.Env):
         return jerk_penalty
             
     
-    def calc_reward(self):
+    def calc_reward(self,action):
         done = self.is_game_over()
-        if len(self.command_history) == 0:
-            if done:
-                return -10
-            return 0
-        last_command = self.command_history[-1]
-        throttle = last_command['throttle']
+
+        throttle = action[1]
         reward = 0
-        print('REWARD throttle' + str(throttle))
-        angle =  last_command['angle']
+        angle =  action[0]
         
-        # no action done; we are in user mode
-        #if len(self.command_history) == 0:
-            #return 0
         
         if done:
             # something went wrong; car got off the track
@@ -145,15 +138,15 @@ class DonkeyAgent(gym.Env):
             self.lifetime = 0
         else:
             # car is on the track
-            #self.lifetime = self.lifetime + 10
+            #self.lifetime = self.lifetime + 1
+            
                 
-            reward = 1 + 1 * (throttle) + self.lifetime
+            reward = 1 + 1 * (throttle)
             
             jerk_penalty = self.jerk_penalty()
             reward = reward - jerk_penalty
 
-        #reward = random.uniform(0,10)
-        #return 0
+
         return reward
     
     def set_action_space(self,min_steer,max_steer,min_throttle,max_throttle):
@@ -201,16 +194,14 @@ class DonkeyAgent(gym.Env):
         if True and self.n_command_history > 0:
             observe = np.concatenate([observe, np.asarray(self.action_history)], 0)
             
-        #observe = np.asarray( [0.] * (52))
-        #print('OBS: %s'%str(observe))
-        
+
         return observe
     
     def viewer_observe(self, action):
         if self.env_type == 'simulator':
             observation = self.wrapped_env.frame
             # calc reward
-            reward = self.calc_reward()
+            reward = self.calc_reward(action)
             done = (self.is_game_over())
             info = self.wrapped_env.info
             

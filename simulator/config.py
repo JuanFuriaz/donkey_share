@@ -205,7 +205,7 @@ BUTTON_PRESS_NEW_TUB = False #when enabled, makes it easier to divide our data i
 #You will want to download the simulator binary from: https://github.com/tawnkramer/donkey_gym/releases/download/v18.9/DonkeySimLinux.zip
 #then extract that and modify DONKEY_SIM_PATH.
 DONKEY_GYM = False
-DONKEY_SIM_PATH = "path to sim" #"/home/tkramer/projects/sdsandbox/sdsim/build/DonkeySimLinux/donkey_sim.x86_64"
+DONKEY_SIM_PATH = "/home/raggeffast/Schreibtisch/raggeffast/Projects/donkey_car/donkey_share/simulator/DonkeySimLinux/donkey_sim.x86_64" #"/home/tkramer/projects/sdsandbox/sdsim/build/DonkeySimLinux/donkey_sim.x86_64"
 DONKEY_GYM_ENV_NAME = "donkey-generated-track-v0" # ("donkey-generated-track-v0"|"donkey-generated-roads-v0"|"donkey-warehouse-v0"|"donkey-avc-sparkfun-v0")
 
 #publish camera over network
@@ -251,8 +251,8 @@ GRADIENT_STEPS = 800
 
 #GRADIENT_STEPS = 60
 
-#LEARNING_STARTS = 300
-LEARNING_STARTS = 10
+LEARNING_STARTS = 300
+#LEARNING_STARTS = 10
 BUFFER_SIZE = 30000
 VARIANTS_SIZE = 32
 IMAGE_CHANNELS = 3
@@ -263,9 +263,9 @@ CRASH_REWARD_WEIGHT = 5
 THROTTLE_REWARD_WEIGHT = 0.1
 #TIME_STEPS = 5000
 # for lvl 1
-TIME_STEPS = 500
+#TIME_STEPS = 500
 #TIME_STEPS = 60
-#TIME_STEPS = 5000
+TIME_STEPS = 10000
 
 # Agent settings
 #MIN_STEERING = -0.1
