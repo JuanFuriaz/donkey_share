@@ -77,7 +77,7 @@ def observe_and_learn(cfg,model_path,vae_path=None):
             vae.to(device).eval()
         
         # create agent; wrapper for environment; later we can add vae to the agent
-        agent = DonkeyAgent(cam,time_step=0.05, frame_skip=2,env_type='simulator', controller=ctr, vae=vae, device=device)
+        agent = DonkeyAgent(cam,time_step=0.05, frame_skip=1,env_type='simulator', controller=ctr, vae=vae, device=device)
         print('DonkeyAgent created...')
         
         model = CustomSAC(CustomSACPolicy, agent, verbose=cfg.VERBOSE, batch_size=cfg.BATCH_SIZE, buffer_size=cfg.BUFFER_SIZE,

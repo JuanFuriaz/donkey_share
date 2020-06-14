@@ -137,6 +137,10 @@ class CustomSAC(SAC):
                         reward = 1000
                     #time.sleep(0.5)
                     
+                if done and reward >= 0:
+                    print('ERROR')
+                    reward = -10
+                    
 
 
                 # Store transition in the replay buffer.
@@ -232,7 +236,7 @@ class CustomSAC(SAC):
                     infos_values = []
                     
                 # check if game is over
-                if True and self.env.is_game_over():
+                if True and done:
                     while self.env.is_game_over():
                         print('waiting for control')
                         time.sleep(1)

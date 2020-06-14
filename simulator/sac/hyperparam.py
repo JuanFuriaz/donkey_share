@@ -1,7 +1,7 @@
-#from stable_baselines.sac.policies import FeedForwardPolicy as SACPolicy
+from stable_baselines.sac.policies import FeedForwardPolicy as SACPolicy
 #from stable_baselines.sac.policies import LnMlpPolicy as SACPolicy
 # works 
-from stable_baselines.sac.policies  import MlpPolicy as SACPolicy
+#from stable_baselines.sac.policies  import MlpPolicy as SACPolicy
 import tensorflow as tf
 
 from config import MIN_THROTTLE, MAX_THROTTLE, REWARD_CRASH, CRASH_REWARD_WEIGHT, THROTTLE_REWARD_WEIGHT
@@ -13,12 +13,12 @@ class CustomSACPolicy(SACPolicy):
         #super(CustomSACPolicy, self).\
         #__init__(*args, **kwargs, layers=[32])
         
-        super(CustomSACPolicy, self).\
-        __init__(*args, **kwargs, layers=[32, 16],act_fun=tf.nn.elu)
+        #super(CustomSACPolicy, self).\
+        #__init__(*args, **kwargs, layers=[32, 16],act_fun=tf.nn.elu)
         # problem with  feature_extraction="mlp"
         
-        #super(CustomSACPolicy, self).\
-        #__init__(*args, **kwargs,layers=[32,16],act_fun=tf.nn.elu,feature_extraction="mlp")
+        super(CustomSACPolicy, self).\
+        __init__(*args, **kwargs,layers=[32,16],act_fun=tf.nn.elu,feature_extraction="mlp")
 
 
 def reward(action, e_i, done):

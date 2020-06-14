@@ -135,11 +135,16 @@ class DonkeyAgent(gym.Env):
             # something went wrong; car got off the track
             reward = -10 - NEGATIVE_REWARD_WEIGHT * throttle
             
+            if self.lifetime < self.best_lifetime:
+                reward = reward - (self.best_lifetime-self.lifetime)*0.1
+            
             self.lifetime = 0
         else:
             # car is on the track
-            #self.lifetime = self.lifetime + 1
+            self.lifetime = self.lifetime + 1
             
+            if self.lifetime > self.best_lifetime:
+                self.best_lifetime = self.lifetime
                 
             reward = 1 + 1 * (throttle)
             
