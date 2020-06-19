@@ -204,9 +204,9 @@ BUTTON_PRESS_NEW_TUB = False #when enabled, makes it easier to divide our data i
 #This enables that, and sets the path to the simualator and the environment.
 #You will want to download the simulator binary from: https://github.com/tawnkramer/donkey_gym/releases/download/v18.9/DonkeySimLinux.zip
 #then extract that and modify DONKEY_SIM_PATH.
-DONKEY_GYM = False
-DONKEY_SIM_PATH = "/home/raggeffast/Schreibtisch/raggeffast/Projects/donkey_car/donkey_share/simulator/DonkeySimLinux/donkey_sim.x86_64" #"/home/tkramer/projects/sdsandbox/sdsim/build/DonkeySimLinux/donkey_sim.x86_64"
-DONKEY_GYM_ENV_NAME = "donkey-generated-track-v0" # ("donkey-generated-track-v0"|"donkey-generated-roads-v0"|"donkey-warehouse-v0"|"donkey-avc-sparkfun-v0")
+DONKEY_GYM = True
+DONKEY_SIM_PATH = "/home/jm/Documents/research/self-driving-car/donkey_test/DonkeySimLinux/donkey_sim.x86_64" # "/home/tkramer/projects/sdsandbox/sdsim/build/DonkeySimLinux/donkey_sim.x86_64"
+DONKEY_GYM_ENV_NAME = "donkey-generated-track-v0" #"donkey-generated-track-v0" # ("donkey-generated-track-v0"|"donkey-generated-roads-v0"|"donkey-warehouse-v0"|"donkey-avc-sparkfun-v0")
 
 #publish camera over network
 #This is used to create a tcp service to pushlish the camera feed

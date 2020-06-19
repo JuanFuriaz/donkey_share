@@ -35,6 +35,7 @@ from donkeycar.parts.behavior import BehaviorPart
 from donkeycar.parts.file_watcher import FileWatcher
 from donkeycar.parts.launch import AiLaunch
 from donkeycar.utils import *
+from argparse import Namespace
 
 #from donkeycar.parts.reinforcement_module import Reinforcement
 #from thread import start_new_thread
@@ -638,10 +639,34 @@ def train_drive_reinforcement(cfg, args, script_mode ):
 
 
 if __name__ == '__main__':
-    args = docopt(__doc__)
+    debug = True
+    if debug:
+        args = {'--camera': None,
+         '--js': False,
+         '--meta': [],
+         '--model': 'models/model_simulator_reinforcement2.h5',
+         '--tub': None,
+         '--type': None,
+         '--vae': None,
+         '3d': False,
+         'behavior': False,
+         'categorical': False,
+         'drive_reinforcement': True,
+         'imu': False,
+         'latent': False,
+         'linear': False,
+         'localizer': False,
+         'rnn': False,
+         'single': False,
+         'stereo': False,
+         'train_reinforcement': True,
+         'train_vae': False}
+
+    else:
+        args = docopt(__doc__)
     cfg = dk.load_config()
-    
     if args['train_reinforcement']:
+       # print(args)
         script_mode = 'train'
         train_drive_reinforcement(cfg, args, script_mode)
         

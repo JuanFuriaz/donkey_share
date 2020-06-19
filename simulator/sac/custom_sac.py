@@ -2,7 +2,10 @@ import numpy as np
 import time
 from collections import deque
 from stable_baselines import SAC, logger
-from stable_baselines.a2c.utils import total_episode_reward_logger
+# New version:
+from stable_baselines.common.tf_util import total_episode_reward_logger
+# Old version:
+# from stable_baselines.a2c.utils import total_episode_reward_logger
 from stable_baselines.common import SetVerbosity, TensorboardWriter, tf_util
 from stable_baselines.common.math_util import scale_action, unscale_action
 from stable_baselines.common.vec_env import VecEnv
