@@ -20,20 +20,25 @@ import time
 from docopt import docopt
 import numpy as np
 
+import sys
+sys.path.insert(0, '../')
+
 import donkeycar as dk
+from train import multi_train, preprocessFileList
 
 #import parts
 from donkeycar.parts.transform import Lambda, TriggeredCallback, DelayedTrigger
 from donkeycar.parts.datastore import TubHandler
-from donkeycar.parts.controller import LocalWebController, \
-    JoystickController, WebFpv
+from donkeycar.parts.controller import LocalWebController, JoystickController
 from donkeycar.parts.throttle_filter import ThrottleFilter
 from donkeycar.parts.behavior import BehaviorPart
 from donkeycar.parts.file_watcher import FileWatcher
 from donkeycar.parts.launch import AiLaunch
 from donkeycar.utils import *
+from argparse import Namespace
 
-
+#from donkeycar.parts.reinforcement_module import Reinforcement
+#from thread import start_new_thread
 import _thread 
 
 from donkey_agent import DonkeyAgent
@@ -131,8 +136,7 @@ def drive_model(cfg,model_path):
         
     
 
-
-def train_drive_reinforcement(cfg, args, script_mode):
+def train_drive_reinforcement(cfg, args, script_mode ):
     '''
     Construct a working robotic vehicle from many parts.
     Each part runs as a job in the Vehicle loop, calling either
@@ -142,18 +146,20 @@ def train_drive_reinforcement(cfg, args, script_mode):
     Parts may have named outputs and inputs. The framework handles passing named outputs
     to parts requesting the same named input.
     '''
-    
+
     model_path=args['--model']
     use_joystick=args['--js']
     meta=args['--meta']
     tub_in = args['--tub']
+    #transfer = args['--transfer']
+    #model_type = args['--type']
+    #continuous = args['--continuous']
+    #aug = args['--aug']
     model_type = args['--type']
     camera_type = args['--camera']
 	
     vae_path=args['--vae']
-    
-    print('VAE_PATH: %s'%vae_path)
-    
+	
     global r
     global ctr
     global cam
@@ -162,7 +168,7 @@ def train_drive_reinforcement(cfg, args, script_mode):
     if cfg.DONKEY_GYM:
         #the simulator will use cuda and then we usually run out of resources
         #if we also try to use cuda. so disable for donkey_gym.
-        os.environ["CUDA_VISIBLE_DEVICES"]="-1"
+        os.environ["CUDA_VISIBLE_DEVICES"]="-1" 
 
     if model_type is None:
         if cfg.TRAIN_LOCALIZER:
@@ -171,15 +177,14 @@ def train_drive_reinforcement(cfg, args, script_mode):
             model_type = "behavior"
         else:
             model_type = cfg.DEFAULT_MODEL_TYPE
-
+    
     #Initialize car
     V = dk.vehicle.Vehicle()
 
-    print("cfg.CAMERA_TYPE", cfg.CAMERA_TYPE)
     if camera_type == "stereo":
 
         if cfg.CAMERA_TYPE == "WEBCAM":
-            from donkeycar.parts.camera import Webcam
+            from donkeycar.parts.camera import Webcam            
 
             camA = Webcam(image_w=cfg.IMAGE_W, image_h=cfg.IMAGE_H, image_d=cfg.IMAGE_DEPTH, iCam = 0)
             camB = Webcam(image_w=cfg.IMAGE_W, image_h=cfg.IMAGE_H, image_d=cfg.IMAGE_DEPTH, iCam = 1)
@@ -197,35 +202,25 @@ def train_drive_reinforcement(cfg, args, script_mode):
 
         from donkeycar.parts.image import StereoPair
 
-        V.add(StereoPair(), inputs=['cam/image_array_a', 'cam/image_array_b'],
+        V.add(StereoPair(), inputs=['cam/image_array_a', 'cam/image_array_b'], 
             outputs=['cam/image_array'])
-    elif cfg.CAMERA_TYPE == "D435":
-        from donkeycar.parts.realsense435i import RealSense435i
-        cam = RealSense435i(
-            enable_rgb=cfg.REALSENSE_D435_RGB,
-            enable_depth=cfg.REALSENSE_D435_DEPTH,
-            enable_imu=cfg.REALSENSE_D435_IMU,
-            device_id=cfg.REALSENSE_D435_ID)
-        V.add(cam, inputs=[],
-              outputs=['cam/image_array', 'cam/depth_array',
-                       'imu/acl_x', 'imu/acl_y', 'imu/acl_z',
-                       'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z'],
-              threaded=True)
 
     else:
-        if False and cfg.DONKEY_GYM:
-            from donkeycar.parts.dgym import DonkeyGymEnv
-
-        inputs = []
-        threaded = True
+        print("cfg.CAMERA_TYPE", cfg.CAMERA_TYPE)
         if cfg.DONKEY_GYM:
             from donkeycar.parts.dgym import DonkeyGymEnv 
-            cam = DonkeyGymEnv(cfg.DONKEY_SIM_PATH, host=cfg.SIM_HOST, env_name=cfg.DONKEY_GYM_ENV_NAME, conf=cfg.GYM_CONF, delay=cfg.SIM_ARTIFICIAL_LATENCY)
+        
+        inputs = []
+        threaded = True
+        print("cfg.CAMERA_TYPE", cfg.CAMERA_TYPE)
+        if cfg.DONKEY_GYM:
+            from donkeycar.parts.dgym import DonkeyGymEnv 
+            cam = DonkeyGymEnv(cfg.DONKEY_SIM_PATH, env_name=cfg.DONKEY_GYM_ENV_NAME)
             threaded = True
             inputs = ['angle', 'throttle']
         elif cfg.CAMERA_TYPE == "PICAM":
             from donkeycar.parts.camera import PiCamera
-            cam = PiCamera(image_w=cfg.IMAGE_W, image_h=cfg.IMAGE_H, image_d=cfg.IMAGE_DEPTH, framerate=cfg.CAMERA_FRAMERATE, vflip=cfg.CAMERA_VFLIP, hflip=cfg.CAMERA_HFLIP)
+            cam = PiCamera(image_w=cfg.IMAGE_W, image_h=cfg.IMAGE_H, image_d=cfg.IMAGE_DEPTH)
         elif cfg.CAMERA_TYPE == "WEBCAM":
             from donkeycar.parts.camera import Webcam
             cam = Webcam(image_w=cfg.IMAGE_W, image_h=cfg.IMAGE_H, image_d=cfg.IMAGE_DEPTH)
@@ -241,79 +236,57 @@ def train_drive_reinforcement(cfg, args, script_mode):
         elif cfg.CAMERA_TYPE == "MOCK":
             from donkeycar.parts.camera import MockCamera
             cam = MockCamera(image_w=cfg.IMAGE_W, image_h=cfg.IMAGE_H, image_d=cfg.IMAGE_DEPTH)
-        elif cfg.CAMERA_TYPE == "IMAGE_LIST":
-            from donkeycar.parts.camera import ImageListCamera
-            cam = ImageListCamera(path_mask=cfg.PATH_MASK)
         else:
             raise(Exception("Unkown camera type: %s" % cfg.CAMERA_TYPE))
-
+            
         V.add(cam, inputs=inputs, outputs=['cam/image_array'], threaded=threaded)
-
+        
     if use_joystick or cfg.USE_JOYSTICK_AS_DEFAULT:
         #modify max_throttle closer to 1.0 to have more power
         #modify steering_scale lower than 1.0 to have less responsive steering
-        if cfg.CONTROLLER_TYPE == "MM1":
-            from donkeycar.parts.robohat import RoboHATController            
-            ctr = RoboHATController(cfg)
-        elif "custom" == cfg.CONTROLLER_TYPE:
-            #
-            # custom controller created with `donkey createjs` command
-            #
-            from my_joystick import MyJoystickController
-            ctr = MyJoystickController(
-                throttle_dir=cfg.JOYSTICK_THROTTLE_DIR,
-                throttle_scale=cfg.JOYSTICK_MAX_THROTTLE,
-                steering_scale=cfg.JOYSTICK_STEERING_SCALE,
-                auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE)
-            ctr.set_deadzone(cfg.JOYSTICK_DEADZONE)
-        else:
-            from donkeycar.parts.controller import get_js_controller
-
-            ctr = get_js_controller(cfg)
-
-            if cfg.USE_NETWORKED_JS:
-                from donkeycar.parts.controller import JoyStickSub
-                netwkJs = JoyStickSub(cfg.NETWORK_JS_SERVER_IP)
-                V.add(netwkJs, threaded=True)
-                ctr.js = netwkJs
+        from donkeycar.parts.controller import get_js_controller
         
-        V.add(ctr, 
-          inputs=['cam/image_array'],
-          outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
-          threaded=True)
+        ctr = get_js_controller(cfg)
+        
+        if cfg.USE_NETWORKED_JS:
+            from donkeycar.parts.controller import JoyStickSub
+            netwkJs = JoyStickSub(cfg.NETWORK_JS_SERVER_IP)
+            V.add(netwkJs, threaded=True)
+            ctr.js = netwkJs
 
-    else:
+    else:        
         #This web controller will create a web server that is capable
         #of managing steering, throttle, and modes, and more.
-        ctr = LocalWebController(port=cfg.WEB_CONTROL_PORT, mode=cfg.WEB_INIT_MODE)
-        
-        V.add(ctr,
-          inputs=['cam/image_array', 'tub/num_records'],
+        ctr = LocalWebController()
+
+    
+    V.add(ctr, 
+          inputs=['cam/image_array'],
           outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
           threaded=True)
 
     #this throttle filter will allow one tap back for esc reverse
     th_filter = ThrottleFilter()
     V.add(th_filter, inputs=['user/throttle'], outputs=['user/throttle'])
-
-    #See if we should even run the pilot module.
+    
+    #See if we should even run the pilot module. 
     #This is only needed because the part run_condition only accepts boolean
     class PilotCondition:
         def run(self, mode):
             if mode == 'user':
                 return False
             else:
-                return True
+                return True       
 
     V.add(PilotCondition(), inputs=['user/mode'], outputs=['run_pilot'])
-
+    
     class LedConditionLogic:
         def __init__(self, cfg):
             self.cfg = cfg
 
         def run(self, mode, recording, recording_alert, behavior_state, model_file_changed, track_loc):
             #returns a blink rate. 0 for off. -1 for on. positive for rate.
-
+            
             if track_loc is not None:
                 led.set_rgb(*self.cfg.LOC_COLORS[track_loc])
                 return -1
@@ -329,7 +302,7 @@ def train_drive_reinforcement(cfg, args, script_mode):
                 return self.cfg.REC_COUNT_ALERT_BLINK_RATE
             else:
                 led.set_rgb(self.cfg.LED_R, self.cfg.LED_G, self.cfg.LED_B)
-
+        
             if behavior_state is not None and model_type == 'behavior':
                 r, g, b = self.cfg.BEHAVIOR_LED_COLORS[behavior_state]
                 led.set_rgb(r, g, b)
@@ -348,19 +321,20 @@ def train_drive_reinforcement(cfg, args, script_mode):
     if cfg.HAVE_RGB_LED and not cfg.DONKEY_GYM:
         from donkeycar.parts.led_status import RGB_LED
         led = RGB_LED(cfg.LED_PIN_R, cfg.LED_PIN_G, cfg.LED_PIN_B, cfg.LED_INVERT)
-        led.set_rgb(cfg.LED_R, cfg.LED_G, cfg.LED_B)
-
+        led.set_rgb(cfg.LED_R, cfg.LED_G, cfg.LED_B)        
+        
         V.add(LedConditionLogic(cfg), inputs=['user/mode', 'recording', "records/alert", 'behavior/state', 'modelfile/modified', "pilot/loc"],
               outputs=['led/blink_rate'])
 
         V.add(led, inputs=['led/blink_rate'])
+        
 
     def get_record_alert_color(num_records):
         col = (0, 0, 0)
         for count, color in cfg.RECORD_ALERT_COLOR_ARR:
             if num_records >= count:
                 col = color
-        return col
+        return col    
 
     class RecordTracker:
         def __init__(self):
@@ -371,17 +345,17 @@ def train_drive_reinforcement(cfg, args, script_mode):
         def run(self, num_records):
             if num_records is None:
                 return 0
-
+            
             if self.last_num_rec_print != num_records or self.force_alert:
                 self.last_num_rec_print = num_records
 
                 if num_records % 10 == 0:
                     print("recorded", num_records, "records")
-
+                        
                 if num_records % cfg.REC_COUNT_ALERT == 0 or self.force_alert:
                     self.dur_alert = num_records // cfg.REC_COUNT_ALERT * cfg.REC_COUNT_ALERT_CYC
                     self.force_alert = 0
-
+                    
             if self.dur_alert > 0:
                 self.dur_alert -= 1
 
@@ -407,8 +381,8 @@ def train_drive_reinforcement(cfg, args, script_mode):
 
     #IMU
     if cfg.HAVE_IMU:
-        from donkeycar.parts.imu import IMU
-        imu = IMU(sensor=cfg.IMU_SENSOR, dlp_setting=cfg.IMU_DLP_CONFIG)
+        from donkeycar.parts.imu import Mpu6050
+        imu = Mpu6050()
         V.add(imu, outputs=['imu/acl_x', 'imu/acl_y', 'imu/acl_z',
             'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z'], threaded=True)
 
@@ -432,10 +406,6 @@ def train_drive_reinforcement(cfg, args, script_mode):
             outputs=[inf_input],
             run_condition='run_pilot')
 
-    # Use the FPV preview, which will show the cropped image output, or the full frame.
-    if False and cfg.USE_FPV:
-        V.add(WebFpv(), inputs=['cam/image_array'], threaded=True)
-
     #Behavioral state
     if cfg.TRAIN_BEHAVIORS:
         bh = BehaviorPart(cfg.BEHAVIOR_LIST)
@@ -445,7 +415,7 @@ def train_drive_reinforcement(cfg, args, script_mode):
         except:
             pass
 
-        inputs = [inf_input, "behavior/one_hot_state_array"]
+        inputs = [inf_input, "behavior/one_hot_state_array"]  
     #IMU
     elif model_type == "imu":
         assert(cfg.HAVE_IMU)
@@ -456,13 +426,24 @@ def train_drive_reinforcement(cfg, args, script_mode):
     else:
         inputs=[inf_input]
 
-    def load_model(kl, model_path):
+    '''def load_model(kl, model_path):
         start = time.time()
         print('loading model', model_path)
         kl.load(model_path)
         print('finished loading in %s sec.' % (str(time.time() - start)) )
+    '''
 
+    def load_weights(kl, weights_path):
+        start = time.time()
+        try:
+            print('loading model weights', weights_path)
+            kl.model.load_weights(weights_path)
+            print('finished loading in %s sec.' % (str(time.time() - start)) )
+        except Exception as e:
+            print(e)
+            print('ERR>> problems loading weights', weights_path)
 
+         
     
     #Choose what inputs should change the car.
     class DriveMode:
@@ -484,11 +465,10 @@ def train_drive_reinforcement(cfg, args, script_mode):
                   'pilot/angle', 'pilot/throttle'], 
           outputs=['angle', 'throttle'])
 
-
-
+    
     #to give the car a boost when starting ai mode in a race.
     aiLauncher = AiLaunch(cfg.AI_LAUNCH_DURATION, cfg.AI_LAUNCH_THROTTLE, cfg.AI_LAUNCH_KEEP_ENABLED)
-
+    
     V.add(aiLauncher,
         inputs=['user/mode', 'throttle'],
         outputs=['throttle'])
@@ -520,37 +500,38 @@ def train_drive_reinforcement(cfg, args, script_mode):
 
     if cfg.RECORD_DURING_AI:
         V.add(AiRecordingCondition(), inputs=['user/mode', 'recording'], outputs=['recording'])
-
+    
     #Drive train setup
-    if cfg.DONKEY_GYM or cfg.DRIVE_TRAIN_TYPE == "MOCK":
+    if cfg.DONKEY_GYM:
         pass
+
     elif cfg.DRIVE_TRAIN_TYPE == "SERVO_ESC":
         from donkeycar.parts.actuator import PCA9685, PWMSteering, PWMThrottle
 
         steering_controller = PCA9685(cfg.STEERING_CHANNEL, cfg.PCA9685_I2C_ADDR, busnum=cfg.PCA9685_I2C_BUSNUM)
         steering = PWMSteering(controller=steering_controller,
-                                        left_pulse=cfg.STEERING_LEFT_PWM,
+                                        left_pulse=cfg.STEERING_LEFT_PWM, 
                                         right_pulse=cfg.STEERING_RIGHT_PWM)
-
+        
         throttle_controller = PCA9685(cfg.THROTTLE_CHANNEL, cfg.PCA9685_I2C_ADDR, busnum=cfg.PCA9685_I2C_BUSNUM)
         throttle = PWMThrottle(controller=throttle_controller,
                                         max_pulse=cfg.THROTTLE_FORWARD_PWM,
-                                        zero_pulse=cfg.THROTTLE_STOPPED_PWM,
+                                        zero_pulse=cfg.THROTTLE_STOPPED_PWM, 
                                         min_pulse=cfg.THROTTLE_REVERSE_PWM)
 
-        V.add(steering, inputs=['angle'], threaded=True)
-        V.add(throttle, inputs=['throttle'], threaded=True)
-
+        V.add(steering, inputs=['angle'])
+        V.add(throttle, inputs=['throttle'])
+    
 
     elif cfg.DRIVE_TRAIN_TYPE == "DC_STEER_THROTTLE":
         from donkeycar.parts.actuator import Mini_HBridge_DC_Motor_PWM
-
+        
         steering = Mini_HBridge_DC_Motor_PWM(cfg.HBRIDGE_PIN_LEFT, cfg.HBRIDGE_PIN_RIGHT)
         throttle = Mini_HBridge_DC_Motor_PWM(cfg.HBRIDGE_PIN_FWD, cfg.HBRIDGE_PIN_BWD)
 
         V.add(steering, inputs=['angle'])
         V.add(throttle, inputs=['throttle'])
-
+    
 
     elif cfg.DRIVE_TRAIN_TYPE == "DC_TWO_WHEEL":
         from donkeycar.parts.actuator import TwoWheelSteeringThrottle, Mini_HBridge_DC_Motor_PWM
@@ -559,7 +540,7 @@ def train_drive_reinforcement(cfg, args, script_mode):
         right_motor = Mini_HBridge_DC_Motor_PWM(cfg.HBRIDGE_PIN_RIGHT_FWD, cfg.HBRIDGE_PIN_RIGHT_BWD)
         two_wheel_control = TwoWheelSteeringThrottle()
 
-        V.add(two_wheel_control,
+        V.add(two_wheel_control, 
                 inputs=['throttle', 'angle'],
                 outputs=['left_motor_speed', 'right_motor_speed'])
 
@@ -573,46 +554,21 @@ def train_drive_reinforcement(cfg, args, script_mode):
         assert(cfg.STEERING_LEFT_PWM <= 200)
         assert(cfg.STEERING_RIGHT_PWM <= 200)
         steering = PWMSteering(controller=steering_controller,
-                                        left_pulse=cfg.STEERING_LEFT_PWM,
+                                        left_pulse=cfg.STEERING_LEFT_PWM, 
                                         right_pulse=cfg.STEERING_RIGHT_PWM)
-
+       
 
         from donkeycar.parts.actuator import Mini_HBridge_DC_Motor_PWM
         motor = Mini_HBridge_DC_Motor_PWM(cfg.HBRIDGE_PIN_FWD, cfg.HBRIDGE_PIN_BWD)
 
-        V.add(steering, inputs=['angle'], threaded=True)
+        V.add(steering, inputs=['angle'])
         V.add(motor, inputs=["throttle"])
-        
-    elif cfg.DRIVE_TRAIN_TYPE == "MM1":
-        from donkeycar.parts.robohat import RoboHATDriver
-        V.add(RoboHATDriver(cfg), inputs=['angle', 'throttle'])
+
     
-    elif cfg.DRIVE_TRAIN_TYPE == "PIGPIO_PWM":
-        from donkeycar.parts.actuator import PWMSteering, PWMThrottle, PiGPIO_PWM
-        steering_controller = PiGPIO_PWM(cfg.STEERING_PWM_PIN, freq=cfg.STEERING_PWM_FREQ, inverted=cfg.STEERING_PWM_INVERTED)
-        steering = PWMSteering(controller=steering_controller,
-                                        left_pulse=cfg.STEERING_LEFT_PWM, 
-                                        right_pulse=cfg.STEERING_RIGHT_PWM)
-        
-        throttle_controller = PiGPIO_PWM(cfg.THROTTLE_PWM_PIN, freq=cfg.THROTTLE_PWM_FREQ, inverted=cfg.THROTTLE_PWM_INVERTED)
-        throttle = PWMThrottle(controller=throttle_controller,
-                                            max_pulse=cfg.THROTTLE_FORWARD_PWM,
-                                            zero_pulse=cfg.THROTTLE_STOPPED_PWM, 
-                                            min_pulse=cfg.THROTTLE_REVERSE_PWM)
-        V.add(steering, inputs=['angle'], threaded=True)
-        V.add(throttle, inputs=['throttle'], threaded=True)
-
-    # OLED setup
-    if cfg.USE_SSD1306_128_32:
-        from donkeycar.parts.oled import OLEDPart
-        auto_record_on_throttle = cfg.USE_JOYSTICK_AS_DEFAULT and cfg.AUTO_RECORD_ON_THROTTLE
-        oled_part = OLEDPart(cfg.SSD1306_128_32_I2C_BUSNUM, auto_record_on_throttle=auto_record_on_throttle)
-        V.add(oled_part, inputs=['recording', 'tub/num_records', 'user/mode'], outputs=[], threaded=True)
-
     #add tub to save data
 
     inputs=['cam/image_array',
-            'user/angle', 'user/throttle',
+            'user/angle', 'user/throttle', 
             'user/mode']
 
     types=['image_array',
@@ -622,12 +578,8 @@ def train_drive_reinforcement(cfg, args, script_mode):
     if cfg.TRAIN_BEHAVIORS:
         inputs += ['behavior/state', 'behavior/label', "behavior/one_hot_state_array"]
         types += ['int', 'str', 'vector']
-
-    if cfg.CAMERA_TYPE == "D435" and cfg.REALSENSE_D435_DEPTH:
-        inputs += ['cam/depth_array']
-        types += ['gray16_array']
-
-    if cfg.HAVE_IMU or (cfg.CAMERA_TYPE == "D435" and cfg.REALSENSE_D435_IMU):
+    
+    if cfg.HAVE_IMU:
         inputs += ['imu/acl_x', 'imu/acl_y', 'imu/acl_z',
             'imu/gyr_x', 'imu/gyr_y', 'imu/gyr_z']
 
@@ -637,7 +589,7 @@ def train_drive_reinforcement(cfg, args, script_mode):
     if cfg.RECORD_DURING_AI:
         inputs += ['pilot/angle', 'pilot/throttle']
         types += ['float', 'float']
-
+    
     th = TubHandler(path=cfg.DATA_PATH)
     tub = th.new_tub_writer(inputs=inputs, types=types, user_meta=meta)
     V.add(tub, inputs=inputs, outputs=["tub/num_records"], run_condition='recording')
@@ -650,26 +602,26 @@ def train_drive_reinforcement(cfg, args, script_mode):
         V.add(pub, inputs=['jpg/bin'])
 
     if type(ctr) is LocalWebController:
-        if cfg.DONKEY_GYM:
-            print("You can now go to http://localhost:%d to drive your car." % cfg.WEB_CONTROL_PORT)
-        else:
-            print("You can now go to <your hostname.local>:%d to drive your car." % cfg.WEB_CONTROL_PORT)
+        print("You can now go to <your pi ip address>:8887 to drive your car.")
     elif isinstance(ctr, JoystickController):
         print("You can now move your joystick to drive your car.")
-        #tell the controller about the tub
+        #tell the controller about the tub        
         ctr.set_tub(tub)
-
+        
         if cfg.BUTTON_PRESS_NEW_TUB:
-
+    
             def new_tub_dir():
                 V.parts.pop()
                 tub = th.new_tub_writer(inputs=inputs, types=types, user_meta=meta)
                 V.add(tub, inputs=inputs, outputs=["tub/num_records"], run_condition='recording')
                 ctr.set_tub(tub)
-
+    
             ctr.set_button_down_trigger('cross', new_tub_dir)
         ctr.print_controls()
         
+        
+
+    
     if script_mode == 'train':
         _thread.start_new_thread(observe_and_learn, (cfg,model_path,vae_path))
     elif script_mode == 'drive':
@@ -678,14 +630,16 @@ def train_drive_reinforcement(cfg, args, script_mode):
         print('collecting data for vae training...')
         
  
-
     #run the vehicle for 20 seconds
-    V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
-            max_loop_count=cfg.MAX_LOOPS)
+    V.start(rate_hz=cfg.DRIVE_LOOP_HZ, 
+            max_loop_count=cfg.MAX_LOOPS, verbose=False)
+        
+
+
 
 
 if __name__ == '__main__':
-    debug = False
+    debug = True
     if debug:
         args = {'--camera': None,
          '--js': False,
@@ -724,4 +678,5 @@ if __name__ == '__main__':
         script_mode = 'train_vae'
         train_drive_reinforcement(cfg, args, script_mode)
     
+
 

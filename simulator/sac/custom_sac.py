@@ -10,7 +10,6 @@ from stable_baselines.common import SetVerbosity, TensorboardWriter, tf_util
 from stable_baselines.common.math_util import scale_action, unscale_action
 from stable_baselines.common.vec_env import VecEnv
 from stable_baselines.ppo2.ppo2 import safe_mean, get_schedule_fn
-from config import LEARN_FROM_USER
 import tensorflow as tf
 
 class CustomSAC(SAC):
@@ -129,16 +128,6 @@ class CustomSAC(SAC):
 
                 new_obs, reward, done, info = self.env.step(unscaled_action)
                 print('got reward %s'%str(reward))
-                
-                # mbeha 18.04.20: check if game is over; you are in user-mode
-                # check actions and learn from user
-                if False and LEARN_FROM_USER and self.env.is_game_over():
-                    last_user_action =  self.env.get_last_user_action()
-                    if False and last_user_action is not None:
-                        action = last_user_action
-                        done = 0
-                        reward = 1000
-                    #time.sleep(0.5)
                     
                 if done and reward >= 0:
                     print('ERROR')

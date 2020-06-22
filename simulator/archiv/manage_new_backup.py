@@ -3,16 +3,17 @@
 Scripts to drive a donkey 2 car
 
 Usage:
-    manage.py (train_reinforcement) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>] 
-    manage.py (drive_reinforcement) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>]
-    manage.py (train_vae) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] 
+    manage.py (drive) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--myconfig=<filename>]
+    manage.py (train) [--tub=<tub1,tub2,..tubn>] [--file=<file> ...] (--model=<model>) [--transfer=<model>] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer)] [--continuous] [--aug] [--myconfig=<filename>]
 
 
 Options:
-    -h --help          Show this screen.
-    --js               Use physical joystick.
-    -f --file=<file>   A text file containing paths to tub files, one per line. Option may be used more than once.
-    --meta=<key:value> Key/Value strings describing describing a piece of meta data about this drive. Option may be used more than once.
+    -h --help               Show this screen.
+    --js                    Use physical joystick.
+    -f --file=<file>        A text file containing paths to tub files, one per line. Option may be used more than once.
+    --meta=<key:value>      Key/Value strings describing describing a piece of meta data about this drive. Option may be used more than once.
+    --myconfig=filename     Specify myconfig file to use. 
+                            [default: myconfig.py]
 """
 import os
 import time
@@ -33,106 +34,7 @@ from donkeycar.parts.file_watcher import FileWatcher
 from donkeycar.parts.launch import AiLaunch
 from donkeycar.utils import *
 
-
-import _thread 
-
-from donkey_agent import DonkeyAgent
-
-import traceback
-import torch
-
-#r = Reinforcement()
-ctr = None
-cam = None
-r = None
-
-from sac import CustomSAC, CustomSACPolicy
-from vae.vae import VAE
-
-
-
-def observe_and_learn(cfg,model_path,vae_path=None):
-    global ctr
-    
-    time_steps = 5000
-    time_steps = 10000
-    
-    try:
-        
-        time.sleep(5)
-		
-        vae = None
-        device = None
-		
-        if vae_path:
-            # init vae 
-            print('Initializing vae...')
-            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-            vae = VAE(image_channels=cfg.IMAGE_CHANNELS, z_dim=cfg.VARIANTS_SIZE)
-            vae.load_state_dict(torch.load(vae_path, map_location=torch.device(device)))
-            vae.to(device).eval()
-        
-        # create agent; wrapper for environment; later we can add vae to the agent
-        agent = DonkeyAgent(cam,time_step=0.05, frame_skip=1,env_type='simulator', controller=ctr, vae=vae, device=device)
-        print('DonkeyAgent created...')
-        
-        model = CustomSAC(CustomSACPolicy, agent, verbose=cfg.VERBOSE, batch_size=cfg.BATCH_SIZE, buffer_size=cfg.BUFFER_SIZE,
-                    learning_starts=cfg.LEARNING_STARTS, gradient_steps=cfg.GRADIENT_STEPS, train_freq=cfg.TRAIN_FREQ,
-                    ent_coef=cfg.ENT_COEF, learning_rate=cfg.LEARNING_RATE)
-        print('CustomSAC Initialized.')
-        
-        print('learning...')
-        
-        ctr.mode = 'local'
-        
-        
-        model.learn(total_timesteps=cfg.TIME_STEPS, log_interval=cfg.LOG_INTERVAL)
-        
-        model.save(model_path)
-            
-        print('Model finished.')
-   
-    except Exception as e:
-      print('error:no new model generated. %s'%e)
-      traceback.print_exc()
-      
-      
-def drive_model(cfg,model_path):
-    global ctr
-    
-    time_steps = 1500
-	
-    vae = None
-		
-    if vae_path:
-        # init vae 
-        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        vae = VAE(image_channels=IMAGE_CHANNELS, z_dim=VARIANTS_SIZE)
-        vae.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device(device)))
-        vae.to(device).eval()
-    
-    # create agent; wrapper for environment; later we can add vae to the agent
-    agent = DonkeyAgent(cam,time_step=0.05, frame_skip=2,env_type='simulator', controller=ctr, vae=vae)
-    print('DonkeyAgent created...')
-    
-
-    model = CustomSAC.load(model_path)
-    print('Executing model...')
-    obs = agent.reset()
-    
-    ctr.mode = 'local'
-    
-    for step in range(time_steps):
-        if step % 100 == 0: print("step: ", step)
-        action, _states = model.predict(obs,deterministic=True)
-        obs, rewards, dones, info = agent.step(action)
-        #print(str(_states))
-        time.sleep(1)
-        
-    
-
-
-def train_drive_reinforcement(cfg, args, script_mode):
+def drive(cfg, model_path=None, use_joystick=False, model_type=None, camera_type='single', meta=[]):
     '''
     Construct a working robotic vehicle from many parts.
     Each part runs as a job in the Vehicle loop, calling either
@@ -142,22 +44,6 @@ def train_drive_reinforcement(cfg, args, script_mode):
     Parts may have named outputs and inputs. The framework handles passing named outputs
     to parts requesting the same named input.
     '''
-    
-    model_path=args['--model']
-    use_joystick=args['--js']
-    meta=args['--meta']
-    tub_in = args['--tub']
-    model_type = args['--type']
-    camera_type = args['--camera']
-	
-    vae_path=args['--vae']
-    
-    print('VAE_PATH: %s'%vae_path)
-    
-    global r
-    global ctr
-    global cam
-
 
     if cfg.DONKEY_GYM:
         #the simulator will use cuda and then we usually run out of resources
@@ -213,7 +99,7 @@ def train_drive_reinforcement(cfg, args, script_mode):
               threaded=True)
 
     else:
-        if False and cfg.DONKEY_GYM:
+        if cfg.DONKEY_GYM:
             from donkeycar.parts.dgym import DonkeyGymEnv
 
         inputs = []
@@ -433,7 +319,7 @@ def train_drive_reinforcement(cfg, args, script_mode):
             run_condition='run_pilot')
 
     # Use the FPV preview, which will show the cropped image output, or the full frame.
-    if False and cfg.USE_FPV:
+    if cfg.USE_FPV:
         V.add(WebFpv(), inputs=['cam/image_array'], threaded=True)
 
     #Behavioral state
@@ -462,28 +348,98 @@ def train_drive_reinforcement(cfg, args, script_mode):
         kl.load(model_path)
         print('finished loading in %s sec.' % (str(time.time() - start)) )
 
+    def load_weights(kl, weights_path):
+        start = time.time()
+        try:
+            print('loading model weights', weights_path)
+            kl.model.load_weights(weights_path)
+            print('finished loading in %s sec.' % (str(time.time() - start)) )
+        except Exception as e:
+            print(e)
+            print('ERR>> problems loading weights', weights_path)
 
-    
+    def load_model_json(kl, json_fnm):
+        start = time.time()
+        print('loading model json', json_fnm)
+        from tensorflow.python import keras
+        try:
+            with open(json_fnm, 'r') as handle:
+                contents = handle.read()
+                kl.model = keras.models.model_from_json(contents)
+            print('finished loading json in %s sec.' % (str(time.time() - start)) )
+        except Exception as e:
+            print(e)
+            print("ERR>> problems loading model json", json_fnm)
+
+    if model_path:
+        #When we have a model, first create an appropriate Keras part
+        kl = dk.utils.get_model_by_type(model_type, cfg)
+
+        model_reload_cb = None
+
+        if '.h5' in model_path or '.uff' in model_path or 'tflite' in model_path or '.pkl' in model_path:
+            #when we have a .h5 extension
+            #load everything from the model file
+            load_model(kl, model_path)
+
+            def reload_model(filename):
+                load_model(kl, filename)
+
+            model_reload_cb = reload_model
+
+        elif '.json' in model_path:
+            #when we have a .json extension
+            #load the model from there and look for a matching
+            #.wts file with just weights
+            load_model_json(kl, model_path)
+            weights_path = model_path.replace('.json', '.weights')
+            load_weights(kl, weights_path)
+
+            def reload_weights(filename):
+                weights_path = filename.replace('.json', '.weights')
+                load_weights(kl, weights_path)
+
+            model_reload_cb = reload_weights
+
+        else:
+            print("ERR>> Unknown extension type on model file!!")
+            return
+
+        #this part will signal visual LED, if connected
+        V.add(FileWatcher(model_path, verbose=True), outputs=['modelfile/modified'])
+
+        #these parts will reload the model file, but only when ai is running so we don't interrupt user driving
+        V.add(FileWatcher(model_path), outputs=['modelfile/dirty'], run_condition="ai_running")
+        V.add(DelayedTrigger(100), inputs=['modelfile/dirty'], outputs=['modelfile/reload'], run_condition="ai_running")
+        V.add(TriggeredCallback(model_path, model_reload_cb), inputs=["modelfile/reload"], run_condition="ai_running")
+
+        outputs=['pilot/angle', 'pilot/throttle']
+
+        if cfg.TRAIN_LOCALIZER:
+            outputs.append("pilot/loc")
+
+        V.add(kl, inputs=inputs,
+            outputs=outputs,
+            run_condition='run_pilot')
+
     #Choose what inputs should change the car.
     class DriveMode:
-        def run(self, mode, 
+        def run(self, mode,
                     user_angle, user_throttle,
                     pilot_angle, pilot_throttle):
-            if mode == 'user': 
+            if mode == 'user':
                 return user_angle, user_throttle
-            
-            elif mode == 'local_angle':
-                return pilot_angle, user_throttle
-            
-            else: 
-                #return pilot_angle, pilot_throttle * cfg.AI_THROTTLE_MULT
-                return user_angle, user_throttle
-        
-    V.add(DriveMode(), 
-          inputs=['user/mode', 'user/angle', 'user/throttle',
-                  'pilot/angle', 'pilot/throttle'], 
-          outputs=['angle', 'throttle'])
 
+            elif mode == 'local_angle':
+                return pilot_angle if pilot_angle else 0.0, user_throttle
+
+            else:
+                return pilot_angle if pilot_angle else 0.0, pilot_throttle * cfg.AI_THROTTLE_MULT if pilot_throttle else 0.0
+
+    V.add(DriveMode(),
+          inputs=['user/mode', 'user/angle', 'user/throttle',
+                  'pilot/angle', 'pilot/throttle'],
+          outputs=['angle', 'throttle'])
 
 
     #to give the car a boost when starting ai mode in a race.
@@ -669,15 +625,6 @@ def train_drive_reinforcement(cfg, args, script_mode):
 
             ctr.set_button_down_trigger('cross', new_tub_dir)
         ctr.print_controls()
-        
-    if script_mode == 'train':
-        _thread.start_new_thread(observe_and_learn, (cfg,model_path,vae_path))
-    elif script_mode == 'drive':
-        _thread.start_new_thread(drive_model, (cfg,model_path))
-    elif script_mode == 'train_vae':
-        print('collecting data for vae training...')
-        
- 
 
     #run the vehicle for 20 seconds
     V.start(rate_hz=cfg.DRIVE_LOOP_HZ,
@@ -685,43 +632,35 @@ def train_drive_reinforcement(cfg, args, script_mode):
 
 
 if __name__ == '__main__':
-    debug = False
-    if debug:
-        args = {'--camera': None,
-         '--js': False,
-         '--meta': [],
-         '--model': 'models/model_simulator_reinforcement2.h5',
-         '--tub': None,
-         '--type': None,
-         '--vae': None,
-         '3d': False,
-         'behavior': False,
-         'categorical': False,
-         'drive_reinforcement': True,
-         'imu': False,
-         'latent': False,
-         'linear': False,
-         'localizer': False,
-         'rnn': False,
-         'single': False,
-         'stereo': False,
-         'train_reinforcement': True,
-         'train_vae': False}
+    args = docopt(__doc__)
+    cfg = dk.load_config(myconfig=args['--myconfig'])
 
-    else:
-        args = docopt(__doc__)
-    cfg = dk.load_config()
-    if args['train_reinforcement']:
-       # print(args)
-        script_mode = 'train'
-        train_drive_reinforcement(cfg, args, script_mode)
-        
-    if args['drive_reinforcement']:
-        script_mode = 'drive'
-        train_drive_reinforcement(cfg, args, script_mode)
-		
-    if args['train_vae']:
-        script_mode = 'train_vae'
-        train_drive_reinforcement(cfg, args, script_mode)
-    
+    if args['drive']:
+        model_type = args['--type']
+        camera_type = args['--camera']
+
+        drive(cfg, model_path=args['--model'], use_joystick=args['--js'],
+              model_type=model_type, camera_type=camera_type,
+              meta=args['--meta'])
+
+    if args['train']:
+        from train import multi_train, preprocessFileList
+
+        tub = args['--tub']
+        model = args['--model']
+        transfer = args['--transfer']
+        model_type = args['--type']
+        continuous = args['--continuous']
+        aug = args['--aug']
+        dirs = preprocessFileList( args['--file'] )
+
+        if tub is not None:
+            tub_paths = [os.path.expanduser(n) for n in tub.split(',')]
+            dirs.extend( tub_paths )
+
+        if model_type is None:
+            model_type = cfg.DEFAULT_MODEL_TYPE
+            print("using default model type of", model_type)
+
+        multi_train(cfg, dirs, model, transfer, model_type, continuous, aug)
 

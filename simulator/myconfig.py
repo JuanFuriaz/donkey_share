@@ -198,12 +198,12 @@
 # #You will want to download the simulator binary from: https://github.com/tawnkramer/donkey_gym/releases/download/v18.9/DonkeySimLinux.zip
 # #then extract that and modify DONKEY_SIM_PATH.
 DONKEY_GYM = True
-DONKEY_SIM_PATH = "/home/mbeha/donkey_car/simulator/sim_old/donkey_sim.x86_64" #"/home/tkramer/projects/sdsandbox/sdsim/build/DonkeySimLinux/donkey_sim.x86_64"
+#DONKEY_SIM_PATH = "/home/mbeha/donkey_car/simulator/sim_old/donkey_sim.x86_64" #"/home/tkramer/projects/sdsandbox/sdsim/build/DonkeySimLinux/donkey_sim.x86_64"
 
 #DONKEY_SIM_PATH = "/home/jm/Documents/research/self-driving-car/donkey_github_test/simulator/sim_new/donkey_sim.x86_64" #"/home/tkramer/projects/sdsandbox/sdsim/build/DonkeySimLinux/donkey_sim.x86_64"
 
 
-DONKEY_GYM_ENV_NAME = "donkey-generated-roads-v0" # ("donkey-generated-track-v0"|"donkey-generated-roads-v0"|"donkey-warehouse-v0"|"donkey-avc-sparkfun-v0")
+#DONKEY_GYM_ENV_NAME = "donkey-generated-roads-v0" # ("donkey-generated-track-v0"|"donkey-generated-roads-v0"|"donkey-warehouse-v0"|"donkey-avc-sparkfun-v0")
 # 
 # #publish camera over network
 # #This is used to create a tcp service to pushlish the camera feed

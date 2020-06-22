@@ -17,7 +17,7 @@ class DonkeyGymEnv(object):
 
         if sim_path != "remote":
             if not os.path.exists(sim_path):
-                raise Exception("The path you provided for the sim does not exist.") 
+                raise Exception("The path %s you provided for the sim does not exist."%sim_path) 
 
             if not is_exe(sim_path):
                 raise Exception("The path you provided is not an executable.") 
