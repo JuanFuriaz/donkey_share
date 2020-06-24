@@ -97,7 +97,7 @@ def observe_and_learn(cfg,model_path,vae_path=None):
       traceback.print_exc()
       
       
-def drive_model(cfg,model_path):
+def drive_model(cfg,model_path,vae_path=None):
     global ctr
     
     time_steps = 1500
@@ -106,16 +106,16 @@ def drive_model(cfg,model_path):
 		
     if vae_path:
         # init vae 
+        print('Initializing vae...')
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        vae = VAE(image_channels=IMAGE_CHANNELS, z_dim=VARIANTS_SIZE)
-        vae.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device(device)))
+        vae = VAE(image_channels=cfg.IMAGE_CHANNELS, z_dim=cfg.VARIANTS_SIZE)
+        vae.load_state_dict(torch.load(vae_path, map_location=torch.device(device)))
         vae.to(device).eval()
     
     # create agent; wrapper for environment; later we can add vae to the agent
-    agent = DonkeyAgent(cam,time_step=0.05, frame_skip=2,env_type='simulator', controller=ctr, vae=vae)
+    agent = DonkeyAgent(cam,time_step=0.05, frame_skip=1,env_type='simulator', controller=ctr, vae=vae)
     print('DonkeyAgent created...')
     
-
     model = CustomSAC.load(model_path)
     print('Executing model...')
     obs = agent.reset()
@@ -124,10 +124,13 @@ def drive_model(cfg,model_path):
     
     for step in range(time_steps):
         if step % 100 == 0: print("step: ", step)
-        action, _states = model.predict(obs,deterministic=True)
+        action, _states = model.predict(obs,deterministic=False)
         obs, rewards, dones, info = agent.step(action)
-        #print(str(_states))
-        time.sleep(1)
+        time.sleep(0.05)
+        
+        while agent.is_game_over():
+            print('waiting for control')
+            time.sleep(1)
         
     
 
@@ -673,7 +676,7 @@ def train_drive_reinforcement(cfg, args, script_mode):
     if script_mode == 'train':
         _thread.start_new_thread(observe_and_learn, (cfg,model_path,vae_path))
     elif script_mode == 'drive':
-        _thread.start_new_thread(drive_model, (cfg,model_path))
+        _thread.start_new_thread(drive_model, (cfg,model_path,vae_path))
     elif script_mode == 'train_vae':
         print('collecting data for vae training...')
         

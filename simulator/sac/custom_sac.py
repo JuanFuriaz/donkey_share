@@ -234,3 +234,9 @@ class CustomSAC(SAC):
                         time.sleep(1)
                     
             return self
+        
+        
+    def predict(self, observation, state=None, mask=None, deterministic=True):
+        actions = self.policy_tf.step(observation[None], deterministic=False).flatten()
+        actions = unscale_action(self.action_space, actions)  # scale the output for the prediction
+        return actions, None
