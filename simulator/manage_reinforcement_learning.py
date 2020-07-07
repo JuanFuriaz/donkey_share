@@ -6,6 +6,7 @@ Usage:
     manage.py (train_reinforcement) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>] 
     manage.py (drive_reinforcement) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>]
     manage.py (train_vae) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] 
+    manage.py (optimize) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>]
 
 
 Options:
@@ -55,7 +56,7 @@ def observe_and_learn(cfg,model_path,vae_path=None):
     global ctr
     
     time_steps = 5000
-    time_steps = 10000
+    time_steps = 15000
     
     try:
         
@@ -100,7 +101,7 @@ def observe_and_learn(cfg,model_path,vae_path=None):
 def drive_model(cfg,model_path,vae_path=None):
     global ctr
     
-    time_steps = 1500
+    time_steps = 5000
 	
     vae = None
 		
@@ -133,6 +134,38 @@ def drive_model(cfg,model_path,vae_path=None):
             time.sleep(1)
         
     
+def optimize_model(cfg,model_path,vae_path=None):
+    global ctr
+    
+    time_steps = 5000
+	
+    vae = None
+		
+    if vae_path:
+        # init vae 
+        print('Initializing vae...')
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        vae = VAE(image_channels=cfg.IMAGE_CHANNELS, z_dim=cfg.VARIANTS_SIZE)
+        vae.load_state_dict(torch.load(vae_path, map_location=torch.device(device)))
+        vae.to(device).eval()
+    
+    # create agent; wrapper for environment; later we can add vae to the agent
+    agent = DonkeyAgent(cam,time_step=0.05, frame_skip=1,env_type='simulator', controller=ctr, vae=vae)
+    print('DonkeyAgent created...')
+    
+    model = CustomSAC.load(model_path,agent)
+    print('Executing model...')
+    
+    model.learning_starts = 0
+    
+    ctr.mode = 'local'
+    
+    model.learn(total_timesteps=time_steps, log_interval=cfg.LOG_INTERVAL)
+    
+    model.save(model_path)
+    
+    print('Model finished.')
+        
 
 
 def train_drive_reinforcement(cfg, args, script_mode):
@@ -677,6 +710,8 @@ def train_drive_reinforcement(cfg, args, script_mode):
         _thread.start_new_thread(observe_and_learn, (cfg,model_path,vae_path))
     elif script_mode == 'drive':
         _thread.start_new_thread(drive_model, (cfg,model_path,vae_path))
+    elif script_mode == 'optimize':
+        _thread.start_new_thread(optimize_model, (cfg,model_path,vae_path))
     elif script_mode == 'train_vae':
         print('collecting data for vae training...')
         
@@ -725,6 +760,10 @@ if __name__ == '__main__':
 		
     if args['train_vae']:
         script_mode = 'train_vae'
+        train_drive_reinforcement(cfg, args, script_mode)
+        
+    if args['optimize']:
+        script_mode = 'optimize'
         train_drive_reinforcement(cfg, args, script_mode)
     
 
