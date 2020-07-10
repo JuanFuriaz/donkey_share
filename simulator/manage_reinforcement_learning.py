@@ -3,10 +3,10 @@
 Scripts to drive a donkey 2 car
 
 Usage:
-    manage.py (train_reinforcement) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>] 
-    manage.py (drive_reinforcement) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>]
+    manage.py (train_reinforcement) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>] [--auto] [--env=(simulator|donkey)] 
+    manage.py (drive_reinforcement) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>] [--env=(simulator|donkey)] 
     manage.py (train_vae) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] 
-    manage.py (optimize) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>]
+    manage.py (optimize) [--model=<model>] [--js] [--type=(linear|categorical|rnn|imu|behavior|3d|localizer|latent)] [--camera=(single|stereo)] [--meta=<key:value> ...] [--tub=<tub1,tub2,..tubn>] [--vae=<vae>] [--auto] [--env=(simulator|donkey)] 
 
 
 Options:
@@ -52,7 +52,7 @@ from vae.vae import VAE
 
 
 
-def observe_and_learn(cfg,model_path,vae_path=None):
+def observe_and_learn(cfg,model_path,vae_path=None,auto_mode=0, env_type='simulator'):
     global ctr
     
     time_steps = 5000
@@ -74,7 +74,7 @@ def observe_and_learn(cfg,model_path,vae_path=None):
             vae.to(device).eval()
         
         # create agent; wrapper for environment; later we can add vae to the agent
-        agent = DonkeyAgent(cam,time_step=0.05, frame_skip=1,env_type='simulator', controller=ctr, vae=vae, device=device)
+        agent = DonkeyAgent(cam,time_step=0.05, frame_skip=1,env_type=env_type, controller=ctr, vae=vae, device=device, auto_mode=auto_mode)
         print('DonkeyAgent created...')
         
         model = CustomSAC(CustomSACPolicy, agent, verbose=cfg.VERBOSE, batch_size=cfg.BATCH_SIZE, buffer_size=cfg.BUFFER_SIZE,
@@ -98,10 +98,10 @@ def observe_and_learn(cfg,model_path,vae_path=None):
       traceback.print_exc()
       
       
-def drive_model(cfg,model_path,vae_path=None):
+def drive_model(cfg,model_path,vae_path=None,env_type='simulator'):
     global ctr
     
-    time_steps = 5000
+    time_steps = 10000
 	
     vae = None
 		
@@ -134,7 +134,7 @@ def drive_model(cfg,model_path,vae_path=None):
             time.sleep(1)
         
     
-def optimize_model(cfg,model_path,vae_path=None):
+def optimize_model(cfg,model_path,vae_path=None,auto_mode=0,env_type='simulator'):
     global ctr
     
     time_steps = 5000
@@ -150,7 +150,7 @@ def optimize_model(cfg,model_path,vae_path=None):
         vae.to(device).eval()
     
     # create agent; wrapper for environment; later we can add vae to the agent
-    agent = DonkeyAgent(cam,time_step=0.05, frame_skip=1,env_type='simulator', controller=ctr, vae=vae)
+    agent = DonkeyAgent(cam,time_step=0.05, frame_skip=1,env_type=env_type, controller=ctr, vae=vae, auto_mode=auto_mode)
     print('DonkeyAgent created...')
     
     model = CustomSAC.load(model_path,agent)
@@ -187,6 +187,14 @@ def train_drive_reinforcement(cfg, args, script_mode):
     camera_type = args['--camera']
 	
     vae_path=args['--vae']
+    
+    auto_mode=0
+    if args['--auto']:
+        auto_mode = 1
+        
+    env_type='simulator'
+    if args['--env']:
+        env_type = args['--env']
     
     print('VAE_PATH: %s'%vae_path)
     
@@ -707,11 +715,11 @@ def train_drive_reinforcement(cfg, args, script_mode):
         ctr.print_controls()
         
     if script_mode == 'train':
-        _thread.start_new_thread(observe_and_learn, (cfg,model_path,vae_path))
+        _thread.start_new_thread(observe_and_learn, (cfg,model_path,vae_path,auto_mode,env_type))
     elif script_mode == 'drive':
-        _thread.start_new_thread(drive_model, (cfg,model_path,vae_path))
+        _thread.start_new_thread(drive_model, (cfg,model_path,vae_path,env_type))
     elif script_mode == 'optimize':
-        _thread.start_new_thread(optimize_model, (cfg,model_path,vae_path))
+        _thread.start_new_thread(optimize_model, (cfg,model_path,vae_path,auto_mode,env_type))
     elif script_mode == 'train_vae':
         print('collecting data for vae training...')
         

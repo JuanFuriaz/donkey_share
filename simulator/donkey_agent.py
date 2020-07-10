@@ -50,10 +50,13 @@ class DonkeyAgent(gym.Env):
     vae = None
     device = None
     best_lifetime = 0
+    
+    # auto_mode to train automatically (only supported on simulator)
+    auto_mode = 0
 
 
 
-    def __init__(self, _wrapped_env, time_step=0.05, frame_skip=2,env_type='simulator', controller=None, vae = None, device = None):
+    def __init__(self, _wrapped_env, time_step=0.05, frame_skip=2,env_type='simulator', controller=None, vae = None, device = None, auto_mode = 0):
 
         # min- max
         self.set_action_space(MIN_STEERING, MAX_STEERING, MIN_THROTTLE, MAX_THROTTLE)
@@ -85,6 +88,8 @@ class DonkeyAgent(gym.Env):
         self.n_command_history = N_COMMAND_HISTORY
 
         self.action_history = [0.] * (self.n_command_history * self.n_commands)
+        
+        self.auto_mode = auto_mode
 
     def viewer_get_sensor_size(self):
         height = 120
@@ -206,7 +211,7 @@ class DonkeyAgent(gym.Env):
         return observe
 
     def viewer_observe(self, action):
-        if self.env_type == 'simulator':
+        if self.env_type == 'simulator' or self.env_type == 'donkey':
             observation = self.wrapped_env.frame
             # calc reward
             reward = self.calc_reward(action)
@@ -235,15 +240,11 @@ class DonkeyAgent(gym.Env):
 
 
     def viewer_take_action(self,action):
-        if self.env_type == 'simulator':
+        if self.env_type == 'simulator' or self.env_type == 'donkey':
             # environment is the simulator
             #self.wrapped_env.action = action
             if self.controller.mode == 'user':
                 self.command_history = []
-                steering = self.controller.angle
-                throttle = self.controller.throttle
-                self.last_user_action = [steering,throttle]
-                print('self.last_user_action: ' + str(self.last_user_action ))
                 return
 
 
@@ -256,8 +257,6 @@ class DonkeyAgent(gym.Env):
             # save command
             command = {'angle':action[0], 'throttle':action[1]}
             self.command_history.append(command)
-            self.last_user_action = None
-            #time.sleep(0.1)
 
         else:
             # environment is the real world
@@ -276,7 +275,9 @@ class DonkeyAgent(gym.Env):
         return action
 
     def step(self, action):
-
+        
+        #print('TTTEST: %s'%dir(self))
+              
         action = self._scaled_action(action)
 
         # Clip steering angle rate to enforce continuity
@@ -299,6 +300,11 @@ class DonkeyAgent(gym.Env):
         self.viewer_take_action([0,0])
         self.lifetime = 0
         command_history = []
+        
+        # auto_mode go to start
+        if self.auto_mode:
+            self.wrapped_env.env.reset()
+        
         #self.action_history = [0.] * (self.n_command_history * self.n_commands)
         observation, reward, done, info = self.viewer_observe([0,0])
         return observation
@@ -311,16 +317,21 @@ class DonkeyAgent(gym.Env):
         return self.wrapped_env.frame
 
     def is_game_over(self):
+        
+        # in auto_mode check if you are on the track
+        if self.auto_mode:
+            info = self.wrapped_env.info
+            cte = info['cte']
+            hit = info['hit']
+            if hit != "none" or (cte < -5 or cte > 1.5):
+                self.viewer_take_action([0,0])
+                return True
+            else:
+                return False
+        
         if self.controller.mode == 'user':
             return True
         else:
             return False
-
-    def get_last_user_action(self):
-        # no action taken
-        if self.last_user_action == [0,0]:
-            return None
-        return self.last_user_action
-
 
 
