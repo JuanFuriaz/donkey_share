@@ -64,6 +64,8 @@ def observe_and_learn(cfg,model_path,vae_path=None,auto_mode=0, env_type='simula
 		
         vae = None
         device = None
+        
+        print('ENV:'+env_type)
 		
         if vae_path:
             # init vae 

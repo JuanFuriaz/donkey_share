@@ -303,7 +303,24 @@ class DonkeyAgent(gym.Env):
         
         # auto_mode go to start
         if self.auto_mode:
+            import inspect
+            print('TTEST:' + str(dir(self.wrapped_env.env.viewer.handler)))
+            
+            #print('TTEST:' + 'x' +  str((self.wrapped_env.env.viewer.handler.x)) + str((self.wrapped_env.env.viewer.handler.y)))
+            
+            #time.sleep(10)
             self.wrapped_env.env.reset()
+            
+            print('TTEST:' + 'x' +  str((self.wrapped_env.env.viewer.handler.x)) + str((self.wrapped_env.env.viewer.handler.y)))
+            
+            #self.wrapped_env.env.viewer.handler.x = self.wrapped_env.env.viewer.handler.x -20
+            #self.wrapped_env.env.viewer.handler.send_reset_car()
+            
+            
+            print('TTEST2:' + 'x' +  str((self.wrapped_env.env.viewer.handler.x)) + str((self.wrapped_env.env.viewer.handler.y)))
+            
+            self.action_history = [0.] * (self.n_command_history * self.n_commands)
+            self.command_history = []
         
         #self.action_history = [0.] * (self.n_command_history * self.n_commands)
         observation, reward, done, info = self.viewer_observe([0,0])
@@ -323,7 +340,10 @@ class DonkeyAgent(gym.Env):
             info = self.wrapped_env.info
             cte = info['cte']
             hit = info['hit']
-            if hit != "none" or (cte < -5 or cte > 1.5):
+            #if hit != "none" or (cte < -5 or cte > 1.0):
+            if hit != "none" or (cte < -5 or cte > 0.9):
+                print('HIT' + str(hit))
+                print('CTE' + str(cte))
                 self.viewer_take_action([0,0])
                 return True
             else:

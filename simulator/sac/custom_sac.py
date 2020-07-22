@@ -133,6 +133,9 @@ class CustomSAC(SAC):
                     print('ERROR')
                     reward = -10
                     
+                if done:
+                    self.env.reset()
+                    
 
 
                 # Store transition in the replay buffer.
@@ -197,6 +200,8 @@ class CustomSAC(SAC):
                     maybe_is_success = info.get('is_success')
                     if maybe_is_success is not None:
                         episode_successes.append(float(maybe_is_success))
+                        
+                        
 
                 if len(episode_rewards[-101:-1]) == 0:
                     mean_reward = -np.inf
