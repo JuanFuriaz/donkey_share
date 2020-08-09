@@ -54,6 +54,7 @@ class DonkeyAgent(gym.Env):
     # auto_mode to train automatically (only supported on simulator)
     auto_mode = 0
 
+    actual_z = None
 
 
     def __init__(self, _wrapped_env, time_step=0.05, frame_skip=2,env_type='simulator', controller=None, vae = None, device = None, auto_mode = 0):
@@ -90,6 +91,7 @@ class DonkeyAgent(gym.Env):
         self.action_history = [0.] * (self.n_command_history * self.n_commands)
         
         self.auto_mode = auto_mode
+        
 
     def viewer_get_sensor_size(self):
         height = 120
@@ -142,7 +144,7 @@ class DonkeyAgent(gym.Env):
             # something went wrong; car got off the track
             reward = -10 - NEGATIVE_REWARD_WEIGHT * throttle
 
-            if self.lifetime < self.best_lifetime:
+            if (not self.auto_mode) and (self.lifetime < self.best_lifetime):
                 reward = reward - (self.best_lifetime-self.lifetime)*0.1
 
             self.lifetime = 0
@@ -152,8 +154,12 @@ class DonkeyAgent(gym.Env):
 
             if self.lifetime > self.best_lifetime:
                 self.best_lifetime = self.lifetime
+        
 
             reward = 1 + 1 * (throttle)
+            
+            if self.auto_mode:
+                reward = 0.1*(throttle / MAX_THROTTLE)
 
             jerk_penalty = self.jerk_penalty()
             reward = reward - jerk_penalty
@@ -197,6 +203,7 @@ class DonkeyAgent(gym.Env):
         tensor = transforms.ToTensor()(croped)
         tensor.to(self.device)
         z, _, _ = self.vae.encode(torch.stack((tensor,tensor),dim=0)[:-1].to(self.device))
+        self.actual_z = z
         return z.detach().cpu().numpy()[0]
 
     def _postprocess_observe(self,observe, action):
@@ -340,8 +347,8 @@ class DonkeyAgent(gym.Env):
             info = self.wrapped_env.info
             cte = info['cte']
             hit = info['hit']
-            #if hit != "none" or (cte < -5 or cte > 1.0):
-            if hit != "none" or (cte < -5 or cte > 0.9):
+            if hit != "none" or (cte < -3 or cte > 3.0):
+            #if hit != "none" or (cte < -5 or cte > 0.9):
                 print('HIT' + str(hit))
                 print('CTE' + str(cte))
                 self.viewer_take_action([0,0])
@@ -353,5 +360,18 @@ class DonkeyAgent(gym.Env):
             return True
         else:
             return False
+    
+    def vae_reconstruction(self):
+        reconst = self.vae.decode(self.actual_z)
+        reconst = reconst.detach().cpu()[0].numpy()
+        reconst = np.transpose(np.uint8(reconst*255),[1,2,0])
+        return reconst
+    
+    def save_vae_z(self):
+        #file1 = open("z","w") 
+        #file1.write(str(self.actual_z)) 
+        #file1.close()
+        
+        torch.save(self.actual_z, 'z_tensor.pt')
 
 

@@ -33,6 +33,7 @@ from donkeycar.parts.behavior import BehaviorPart
 from donkeycar.parts.file_watcher import FileWatcher
 from donkeycar.parts.launch import AiLaunch
 from donkeycar.utils import *
+import matplotlib.pyplot as plt
 
 
 import _thread 
@@ -50,10 +51,11 @@ r = None
 from sac import CustomSAC, CustomSACPolicy
 from vae.vae import VAE
 
-
+agent = None
 
 def observe_and_learn(cfg,model_path,vae_path=None,auto_mode=0, env_type='simulator'):
     global ctr
+    global agent
     
     time_steps = 5000
     time_steps = 15000
@@ -169,6 +171,18 @@ def optimize_model(cfg,model_path,vae_path=None,auto_mode=0,env_type='simulator'
     print('Model finished.')
         
 
+def save_reconstruction(cfg):
+    import torchvision.transforms.functional as F_
+    import cv2
+    global agent
+    time.sleep(10)
+    
+    for i in range(cfg.TIME_STEPS):
+        agent.save_vae_z()
+        time.sleep(0.1)
+    
+    
+    
 
 def train_drive_reinforcement(cfg, args, script_mode):
     '''
@@ -718,6 +732,8 @@ def train_drive_reinforcement(cfg, args, script_mode):
         
     if script_mode == 'train':
         _thread.start_new_thread(observe_and_learn, (cfg,model_path,vae_path,auto_mode,env_type))
+
+        _thread.start_new_thread(save_reconstruction, (cfg,))
     elif script_mode == 'drive':
         _thread.start_new_thread(drive_model, (cfg,model_path,vae_path,env_type))
     elif script_mode == 'optimize':

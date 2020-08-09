@@ -1,0 +1,60 @@
+-----------------------------------------------------------------------------------------
+Simulator Usage
+-----------------------------------------------------------------------------------------
+
+load anaconda environment
+-----------------------------------------------------------------------------------------
+
+conda activate donkey
+
+
+generate training data for vae
+-----------------------------------------------------------------------------------------
+
+python manage_reinforcement_learning.py train_vae
+
+*note: you can also use a pretrained vae; the data will be generated in data directory
+
+
+train model with vae 
+-----------------------------------------------------------------------------------------
+
+python manage_reinforcement_learning.py  train_reinforcement --model {model_output_path} --vae {vae_model_file_name}
+
+*example:
+
+python manage_reinforcement_learning.py  train_reinforcement --model models/model_simulator_reinforcement2.h5 --vae vae_tub_1_20-08-08_edges_080820_beta9_new_data_extended.torch 
+
+*note: if you want to use the automatic training mode, append '--auto' to command
+
+
+optimize model 
+-----------------------------------------------------------------------------------------
+
+python manage_reinforcement_learning.py  optimize --model {model_input_output_path} --vae {vae_model_file_name}
+
+*example:
+
+python manage_reinforcement_learning.py  optimize --model models/model_simulator_reinforcement2.h5 --vae vae_tub_1_20-08-08_edges_080820_beta9_new_data_extended.torch 
+
+
+execute trained model 
+-----------------------------------------------------------------------------------------
+
+python manage_reinforcement_learning.py  train_reinforcement --model {model_input_path} --vae {vae_model_file_name}
+
+*example:
+
+python manage_reinforcement_learning.py  drive_reinforcement --model models/model_simulator_reinforcement2.h5 --vae vae_tub_1_20-08-08_edges_080820_beta9_new_data_extended.torch 
+
+
+show reconstruction data with trained vae
+-----------------------------------------------------------------------------------------
+
+python show_vae_reconstruction.py --vae {vae_model_file_name}
+
+*example:
+
+python show_vae_reconstruction.py --vae vae_tub_1_20-08-07_070820_beta9_new_data_extended_try2.torch 
+
+
